@@ -1,0 +1,6 @@
+.idea/
+__pycache__/
+.env
+logs/
+migrations/
+pyproject.toml
