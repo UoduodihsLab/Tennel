@@ -17,7 +17,7 @@ class BaseCRUD(Generic[ModelType]):
         return await self.model.filter(pk=pk).first()
 
     async def create(self, data: Dict[str, Any]) -> ModelType:
-        return await self.model(**data)
+        return await self.model.create(**data)
 
     async def update(self, db_obj: ModelType, data: Dict[str, Any]) -> ModelType:
         for field, value in data.items():

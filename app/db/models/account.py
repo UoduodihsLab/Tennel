@@ -11,7 +11,6 @@ class AccountModel(BaseModel):
     two_fa = fields.CharField(max_length=32)
     session_name = fields.CharField(unique=True, max_length=16)
 
-
     user = fields.ForeignKeyField('models.UserModel', related_name='accounts', on_delete=fields.CASCADE)
 
     class Meta:

@@ -9,10 +9,14 @@ class AccountCreate(BaseModel):
 
 
 class AccountResponse(BaseModel):
-    tid: int | None
-    username: str | None
+    tid: int | None = Field(None)
+    username: str | None = Field(None)
     phone: str
     session_name: str
+
+    model_config = {
+        'from_attributes': True
+    }
 
 
 class AccountStartLogin(BaseModel):
@@ -28,4 +32,8 @@ class AccountCompleteLogin(BaseModel):
 
 class StartLoginResponse(BaseModel):
     phone_code_hash: str
+
+
+class AccountFilter(BaseModel):
+    status: int | None = Field(None)
 

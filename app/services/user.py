@@ -47,4 +47,7 @@ class UserService:
         hashed_password = hash_password(user_in.password)
         user_dict = {'username': user_in.username, 'hashed_password': hashed_password, 'role': user_in.role}
         new_user = await self.crud.create(user_dict)
+
+        print(new_user.id)
+
         return UserResponse.model_validate(new_user)

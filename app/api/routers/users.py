@@ -1,10 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 
 from app.api.deps import require_admin_role
-from app.schemas.common import PaginationParamsSchema
-from app.schemas.user import UserResponse, UserCreate, UserListResponse, UserFilter
+from app.schemas.common import Pagination, PageResponse
+from app.schemas.user import UserResponse, UserCreate, UserFilter
 from app.services.user import UserService
 
 service = UserService()
@@ -21,11 +21,20 @@ async def create_user(user_in: UserCreate):
     return await service.create_user(user_in)
 
 
-@router.get('/', response_model=UserListResponse, status_code=status.HTTP_200_OK, summary='获取用户列表')
+@router.get(
+    '/',
+    response_model=PageResponse[UserResponse],
+    status_code=status.HTTP_200_OK,
+    summary='获取用户列表'
+)
 async def read_users(
         filters: UserFilter = Depends(),
-        pagination: PaginationParamsSchema = Depends(),
-        order_by: List[str] | None = None,
+        pagination: Pagination = Depends(),
+        order_by: List[str] = Query(
+            None,
+            title='排序字段',
+            description='允许传入多个字段，按顺序排序，如 ?order_by=name&order_by=age'
+        ),
 ):
     total, users = await service.list_users(
         filters=filters,
@@ -34,7 +43,7 @@ async def read_users(
         order_by=order_by,
     )
 
-    return UserListResponse(total=total, users=users)
+    return PageResponse[UserResponse](total=total, items=users)
 
 
 @router.get('/{user_id}', response_model=UserResponse, status_code=status.HTTP_200_OK, summary='获取单个用户信息')
