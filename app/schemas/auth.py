@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 
 
-class LoginSchema(BaseModel):
+class LoginData(BaseModel):
     username: str
     password: str
 
 
-class TokenOutSchema(BaseModel):
+class TokenResponse(BaseModel):
     token: str
     token_type: str

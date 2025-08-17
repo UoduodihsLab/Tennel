@@ -1,6 +1,6 @@
 # app/core/config.py
-
 from pathlib import Path
+from typing import Tuple
 
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,6 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class Settings(BaseSettings):
     BASE_DIR: Path = BASE_DIR
+
+    TELEGRAM_SESSIONS_ROOT: Path = BASE_DIR / "telegram-session"
 
     LOG_LEVEL: str = 'INFO'
 
@@ -21,6 +23,9 @@ class Settings(BaseSettings):
 
     TELEGRAM_API_ID: int
     TELEGRAM_API_HASH: str
+
+    ENABLE_PROXY: bool = True
+    PROXY: Tuple[str, str, int, str, str] = ('socks5', '127.0.0.1', 7897, '', '')
 
     TOKEN_SECRET_KEY: str
     TOKEN_ALGORITHM: str

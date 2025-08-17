@@ -1,20 +1,22 @@
 from passlib.context import CryptContext
+from telethon.errors import NotFoundError
 
-from app.crud.user import user_crud
-from app.schemas.auth import LoginSchema, TokenOutSchema
-
+from app.crud.user import UserCRUD
+from app.schemas.auth import LoginData, TokenResponse
 from app.utils.security import create_access_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-async def login_service(data: LoginSchema):
-    user = await user_crud.get_by_username(data.username)
-    if not user or not pwd_context.verify(data.password, user.hashed_password):
-        raise ValueError("Invalid username or password")
+class AuthService:
+    def __init__(self):
+        self.crud = UserCRUD()
 
-    token_data = {'sub': str(user.id)}
-    token = create_access_token(token_data)
+    async def login(self, login_data: LoginData):
+        user = await self.crud.get_by_username(login_data.username)
+        if not user:
+            raise NotFoundError("User not found")
 
-    token_out = TokenOutSchema.model_validate({'token': token, 'token_type': 'bearer'})
-    return token_out
+        token_payload = {'sub': user.username, 'uid': user.id, 'role': user.role}
+        token = create_access_token(token_payload)
+        return TokenResponse.model_validate({'token': token, 'token_type': 'bearer'})

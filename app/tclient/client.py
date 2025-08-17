@@ -49,6 +49,13 @@ class ClientManager:
                 await client.disconnect()
 
 
+def get_static_client_for_phone(phone: str) -> TelegramClient:
+    session_file = str(settings.TELEGRAM_SESSIONS_ROOT)
+    if settings.ENABLE_PROXY:
+        return TelegramClient(session_file, settings.TELEGRAM_API_ID, settings.TELEGRAM_API_HASH, proxy=settings.PROXY)
+    return TelegramClient(session_file, settings.TELEGRAM_API_ID, settings.TELEGRAM_API_HASH)
+
+
 async def create_channel(client: TelegramClient, title: str, about: str) -> types.Channel:
     result = await client(
         functions.channels.CreateChannelRequest(

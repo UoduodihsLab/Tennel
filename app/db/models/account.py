@@ -5,10 +5,12 @@ from app.db.base import BaseModel
 
 # Telegram 账号
 class AccountModel(BaseModel):
-    tid = fields.BigIntField()
-    username = fields.CharField(unique=True, max_length=64)
+    tid = fields.BigIntField(null=True)
+    username = fields.CharField(unique=True, max_length=64, null=True)
     phone = fields.CharField(unique=True, max_length=16)
+    two_fa = fields.CharField(max_length=32)
     session_name = fields.CharField(unique=True, max_length=16)
+
 
     user = fields.ForeignKeyField('models.UserModel', related_name='accounts', on_delete=fields.CASCADE)
 

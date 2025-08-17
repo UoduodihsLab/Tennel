@@ -4,3 +4,4 @@ __pycache__/
 logs/
 migrations/
 pyproject.toml
+sessions/

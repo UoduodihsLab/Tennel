@@ -1,50 +1,50 @@
 from typing import Tuple, List
 
-from app.crud.user import user_crud
-from app.db.models.user import UserModel
-from app.schemas.user import UserFilterParamsSchema, UserCreateSchema, UserUpdateSchema, UserSchema
+from app.crud.user import UserCRUD
+from app.exceptions import NotFoundRecordError, AlreadyExistError
+from app.schemas.user import UserResponse, UserFilter, UserCreate
 from app.utils.security import hash_password
 
 
 class UserService:
-    @staticmethod
-    async def get_user_by_id(user_id: int) -> UserModel | None:
-        return await user_crud.get(pk=user_id)
+    def __init__(self):
+        self.crud = UserCRUD()
 
-    @staticmethod
-    async def get_users_filtered(
-            filters: UserFilterParamsSchema,
+    async def get_user_by_id(self, user_id: int) -> UserResponse | None:
+        user = await self.crud.get(user_id)
+
+        if user is None:
+            raise NotFoundRecordError(f'User {user_id} not found')
+
+        return UserResponse.model_validate(user)
+
+    async def list_users(
+            self,
+            filters: UserFilter,
             page: int,
-            size: int
-    ) -> Tuple[int, List[UserModel]]:
+            size: int,
+            order_by: List[str] | None = None,
+    ) -> Tuple[int, List[UserResponse]]:
         offset = (page - 1) * size
         filter_dict = filters.model_dump(exclude_unset=True)
-        total, users = await user_crud.get_multi_paginated_filtered(
+        total, rows = await self.crud.list_filtered(
             offset=offset,
             limit=size,
             filters=filter_dict,
+            order_by=order_by
         )
+
+        users = [UserResponse.model_validate(row) for row in rows]
 
         return total, users
 
-    @staticmethod
-    async def create_user(
-            user_in: UserCreateSchema,
-    ) -> UserModel | None:
-        # TODO: 检查用户名是否已经存在
+    async def create_user(self, user_in: UserCreate) -> UserResponse | None:
+        user_created = await self.crud.get_by_username(user_in.username)
 
-        create_data_dict = user_in.model_dump()
-        create_data_dict['hashed_password'] = hash_password(create_data_dict.pop('password'))
+        if user_created:
+            raise AlreadyExistError(f'User {user_in.username} already exists')
 
-        return await user_crud.create(**create_data_dict)
-
-    @staticmethod
-    async def update_user(user: UserModel, user_in: UserUpdateSchema) -> UserModel:
-        return await user_crud.update(db_obj=user, data=user_in)
-
-    @staticmethod
-    async def delete_user(user_id: int) -> int:
-        return await user_crud.remove(pk=user_id)
-
-
-user_service = UserService()
+        hashed_password = hash_password(user_in.password)
+        user_dict = {'username': user_in.username, 'hashed_password': hashed_password, 'role': user_in.role}
+        new_user = await self.crud.create(user_dict)
+        return UserResponse.model_validate(new_user)

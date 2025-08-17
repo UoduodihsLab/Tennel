@@ -4,25 +4,25 @@ from pydantic import BaseModel, Field
 from app.constants.enum import UserRoleEnum
 
 
-class UserBaseSchema(BaseModel):
+class UserBase(BaseModel):
     username: str
     role: UserRoleEnum
 
 
-class UserCreateSchema(UserBaseSchema):
-    password: str = Field(..., min_length=6, max_length=64)
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=6, max_length=16)
 
 
-class UserUpdateSchema(BaseModel):
+class UserUpdate(BaseModel):
     username: str | None = None
 
 
-class UserChangePasswordSchema(BaseModel):
+class UserChangePassword(BaseModel):
     old_password: str
     new_password: str
 
 
-class UserSchema(UserBaseSchema):
+class UserResponse(UserBase):
     id: int
 
     model_config = {
@@ -30,13 +30,11 @@ class UserSchema(UserBaseSchema):
     }
 
 
-class UsersSchema(BaseModel):
+class UserListResponse(BaseModel):
     total: int
-    users: List[UserSchema]
+    users: List[UserResponse]
 
 
-class UserFilterParamsSchema(BaseModel):
+class UserFilter(BaseModel):
     username: str | None = Field(None, description='按用户名搜索')
     role: UserRoleEnum | None = Field(None, description='按角色精确匹配')
-
-
