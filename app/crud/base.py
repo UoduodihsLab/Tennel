@@ -19,13 +19,8 @@ class BaseCRUD(Generic[ModelType]):
     async def create(self, data: Dict[str, Any]) -> ModelType:
         return await self.model.create(**data)
 
-    async def update(self, db_obj: ModelType, data: Dict[str, Any]) -> ModelType:
-        for field, value in data.items():
-            if hasattr(db_obj, field):
-                setattr(db_obj, field, value)
-
-        await db_obj.save()
-        return db_obj
+    async def update(self, pk: int, data: Dict[str, Any]) -> int:
+        return await self.model.filter(pk=pk).update(**data)
 
     async def delete(self, pk: Any) -> int:
         return await self.model.filter(pk=pk).delete()

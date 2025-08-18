@@ -7,6 +7,7 @@ from typing import List, Dict
 from telethon import TelegramClient, types, functions
 
 from app.core.config import settings
+from app.exceptions import GetClientError
 
 
 class ClientManager:
@@ -50,9 +51,10 @@ class ClientManager:
 
 
 def get_static_client_for_phone(phone: str) -> TelegramClient:
-    session_file = str(settings.TELEGRAM_SESSIONS_ROOT)
+    session_file = str(settings.TELEGRAM_SESSIONS_ROOT / phone)
     if settings.ENABLE_PROXY:
-        return TelegramClient(session_file, settings.TELEGRAM_API_ID, settings.TELEGRAM_API_HASH, proxy=settings.PROXY)
+        return TelegramClient(session_file, settings.TELEGRAM_API_ID, settings.TELEGRAM_API_HASH,
+                              proxy=settings.PROXY)
     return TelegramClient(session_file, settings.TELEGRAM_API_ID, settings.TELEGRAM_API_HASH)
 
 

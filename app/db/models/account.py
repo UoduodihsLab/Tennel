@@ -10,6 +10,8 @@ class AccountModel(BaseModel):
     phone = fields.CharField(unique=True, max_length=16)
     two_fa = fields.CharField(max_length=32)
     session_name = fields.CharField(unique=True, max_length=16)
+    is_authenticated = fields.BooleanField(default=False)
+    online = fields.BooleanField(default=False)
 
     user = fields.ForeignKeyField('models.UserModel', related_name='accounts', on_delete=fields.CASCADE)
 

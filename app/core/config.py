@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 class Settings(BaseSettings):
     BASE_DIR: Path = BASE_DIR
 
-    TELEGRAM_SESSIONS_ROOT: Path = BASE_DIR / "telegram-session"
+    TELEGRAM_SESSIONS_ROOT: Path = BASE_DIR / "sessions"
 
     LOG_LEVEL: str = 'INFO'
 

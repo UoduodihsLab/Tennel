@@ -1,8 +1,22 @@
+import logging
 from typing import List, Tuple
 
+from telethon import TelegramClient
+from telethon.errors import SessionPasswordNeededError
+
 from app.crud.account import AccountCRUD
-from app.exceptions import AlreadyExistError
-from app.schemas.account import AccountCreate, AccountResponse, AccountFilter
+from app.db.models.account import AccountModel
+from app.db.models.user import UserModel
+from app.exceptions import AlreadyExistError, AlreadyAuthenticatedError, GetClientError, UpdateRecordError
+from app.exceptions import NotFoundRecordError, PermissionDeniedError
+from app.schemas.account import (AccountCreate,
+                                 AccountResponse,
+                                 AccountFilter,
+                                 StartLoginResponse,
+                                 AccountCompleteLogin, CompleteLoginResponse)
+from app.tclient.client import get_static_client_for_phone
+
+logger = logging.getLogger(__name__)
 
 
 class AccountService:
@@ -42,3 +56,74 @@ class AccountService:
         accounts = [AccountResponse.model_validate(row) for row in rows]
 
         return total, accounts
+
+    async def get_user_account(self, user: UserModel, account_id: int) -> AccountModel:
+        account = await self.crud.get_with_user(account_id)
+
+        if account is None:
+            raise NotFoundRecordError('账号不存在')
+
+        if account.user.id != user.id:
+            raise PermissionDeniedError(f'权限错误: {account.user.username} 没有权限操作账号 {account.id}')
+
+        return account
+
+    @staticmethod
+    def get_account_client(phone: str) -> TelegramClient:
+        try:
+            return get_static_client_for_phone(phone)
+        except Exception as e:
+            raise GetClientError(e) from e
+
+    @staticmethod
+    async def ensure_not_authenticated(client, account: AccountModel):
+        if await client.is_user_authorized():
+            raise AlreadyAuthenticatedError(f'账号{account.user.username}已授登录, 请勿重复登录')
+
+    async def start_login(self, user: UserModel, account_id: int) -> StartLoginResponse:
+        account = await self.get_user_account(user, account_id)
+        client = self.get_account_client(account.phone)
+        await client.connect()
+
+        try:
+            await self.ensure_not_authenticated(client, account)
+            sent_code_response = await client.send_code_request(account.phone)
+            return StartLoginResponse(phone_code_hash=sent_code_response.phone_code_hash)
+        finally:
+            if client.is_connected():
+                await client.disconnect()
+
+    async def complete_login(
+            self,
+            user: UserModel,
+            account_id,
+            data_to_complete: AccountCompleteLogin
+    ) -> CompleteLoginResponse:
+        account = await self.get_user_account(user, account_id)
+        client = self.get_account_client(account.phone)
+        await client.connect()
+
+        account_info = None
+        try:
+            await self.ensure_not_authenticated(client, account)
+            await client.sign_in(phone=account.phone, code=data_to_complete.code, phone_code_hash=data_to_complete.phone_code_hash)
+        except SessionPasswordNeededError as e:
+            logger.error(e)
+            await client.sign_in(password=account.two_fa)
+            account_info = await client.get_me()
+        finally:
+            if client.is_connected():
+                await client.disconnect()
+
+        data_to_update = {
+            'tid': account_info.id,
+            'username': account_info.username,
+            'is_authenticated': True,
+        }
+        updated = await self.crud.update(account.id, data_to_update)
+        if updated < 1:
+            raise UpdateRecordError(f'更新 {account.phone} 失败')
+        updated_account = await self.crud.get(account.id)
+        if updated_account is None:
+            raise NotFoundRecordError(f'账号 {account.phone} 在认证过程中被删除')
+        return CompleteLoginResponse.model_validate(updated_account)

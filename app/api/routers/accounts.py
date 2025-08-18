@@ -1,12 +1,17 @@
+import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, status, Query, Request
+from fastapi import APIRouter, Depends, status, Query, Request, HTTPException
 
 from app.api.deps import auth_dependency
 from app.db.models import UserModel
-from app.schemas.account import AccountCreate, AccountResponse, AccountFilter
+from app.exceptions import AlreadyAuthenticatedError, GetClientError, UpdateRecordError, PermissionDeniedError
+from app.schemas.account import AccountCreate, AccountResponse, AccountFilter, StartLoginResponse, \
+    AccountCompleteLogin, CompleteLoginResponse
 from app.schemas.common import PageResponse, Pagination
 from app.services.account import AccountService
+
+logger = logging.getLogger(__name__)
 
 service = AccountService()
 
@@ -41,7 +46,7 @@ async def list_accounts(
             None,
             title='排序字段',
             description='允许传入多个字段，按顺序排序，如 ?order_by=name&order_by=age'
-        ),
+        )
 ):
     total, accounts = await service.list_accounts(
         filters=filters,
@@ -51,3 +56,40 @@ async def list_accounts(
     )
 
     return PageResponse[AccountResponse](total=total, items=accounts)
+
+
+@router.post(
+    '/{account_id}/start-login',
+    response_model=StartLoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Start login"
+)
+async def start_login(request: Request, account_id: int):
+    current_user: UserModel = request.state.user
+
+    try:
+        return await service.start_login(current_user, account_id)
+    except PermissionDeniedError as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except GetClientError as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    '/{account_id}/complete-login',
+    response_model=CompleteLoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Complete login",
+)
+async def complete_login(request: Request, account_id: int, data: AccountCompleteLogin):
+    current_user: UserModel = request.state.user
+
+    try:
+        return await service.complete_login(current_user, account_id, data)
+    except PermissionDeniedError as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except (AlreadyAuthenticatedError, GetClientError, UpdateRecordError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
