@@ -5,6 +5,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app.api.routers.accounts import router as account_router
 from app.api.routers.auth import router as auth_router
+from app.api.routers.channels import router as channel_router
 from app.api.routers.users import router as user_router
 from app.core.lifespan import lifespan
 from app.core.logging_config import setup_logging
@@ -16,7 +17,8 @@ setup_logging()
 app = FastAPI(
     lifespan=lifespan,
     title='Tennel',
-    version='0.0.1'
+    version='0.0.1',
+    debug=True,
 )
 
 
@@ -33,6 +35,7 @@ async def existing_exception_handler(request: Request, exc: AlreadyExistError):
 app.include_router(user_router)
 app.include_router(auth_router)
 app.include_router(account_router)
+app.include_router(channel_router)
 
 register_tortoise(
     app,

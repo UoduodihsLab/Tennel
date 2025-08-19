@@ -1,7 +1,8 @@
-from typing import Tuple, List
+from typing import List
 
 from app.crud.user import UserCRUD
 from app.exceptions import NotFoundRecordError, AlreadyExistError
+from app.schemas.common import PageResponse
 from app.schemas.user import UserResponse, UserFilter, UserCreate
 from app.utils.security import hash_password
 
@@ -18,25 +19,13 @@ class UserService:
 
         return UserResponse.model_validate(user)
 
-    async def list_users(
-            self,
-            filters: UserFilter,
-            page: int,
-            size: int,
-            order_by: List[str] | None = None,
-    ) -> Tuple[int, List[UserResponse]]:
+    async def list(self, *, page: int, size: int, filters: UserFilter, order_by: List[str] | None = None) -> \
+    PageResponse[UserResponse]:
         offset = (page - 1) * size
         filter_dict = filters.model_dump(exclude_unset=True)
-        total, rows = await self.crud.list_filtered(
-            offset=offset,
-            limit=size,
-            filters=filter_dict,
-            order_by=order_by
-        )
-
-        users = [UserResponse.model_validate(row) for row in rows]
-
-        return total, users
+        total, rows = await self.crud.list(offset=offset, limit=size, filters=filter_dict, order_by=order_by)
+        items = [UserResponse.model_validate(row) for row in rows]
+        return PageResponse[UserResponse](total=total, items=items)
 
     async def create_user(self, user_in: UserCreate) -> UserResponse | None:
         user_created = await self.crud.get_by_username(user_in.username)
@@ -47,7 +36,5 @@ class UserService:
         hashed_password = hash_password(user_in.password)
         user_dict = {'username': user_in.username, 'hashed_password': hashed_password, 'role': user_in.role}
         new_user = await self.crud.create(user_dict)
-
-        print(new_user.id)
 
         return UserResponse.model_validate(new_user)

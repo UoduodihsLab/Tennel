@@ -1,11 +1,11 @@
 from tortoise import fields
 
-from app.constants.enum import ChannelStatus, AccountRole
+from app.constants.enum import AccountRole
 from app.db.base import BaseModel
 
 
 class ChannelModel(BaseModel):
-    tid = fields.BigIntField()
+    tid = fields.BigIntField(unique=True)
     title = fields.CharField(unique=True, max_length=255)
     username = fields.CharField(unique=True, max_length=64, null=True)
     photo_name = fields.TextField(null=True)
@@ -14,7 +14,7 @@ class ChannelModel(BaseModel):
     lang = fields.CharField(max_length=16)
     primary_links = fields.JSONField(null=True)
 
-    status = fields.IntEnumField(ChannelStatus, default=ChannelStatus.UNSYNCED)
+    is_banned = fields.BooleanField(default=False)
 
     user = fields.ForeignKeyField('models.UserModel', related_name='channels', on_delete=fields.CASCADE)
 

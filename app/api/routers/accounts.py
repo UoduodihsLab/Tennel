@@ -23,7 +23,7 @@ router = APIRouter(
 
 
 @router.post(
-    '',
+    '/',
     response_model=AccountResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create new account"
@@ -34,28 +34,20 @@ async def create_account(request: Request, create_data: AccountCreate):
 
 
 @router.get(
-    '',
+    '/',
     response_model=PageResponse[AccountResponse],
     status_code=status.HTTP_200_OK,
     summary="List accounts"
 )
-async def list_accounts(
+async def read_accounts(
+        request: Request,
         filters: AccountFilter = Depends(),
         pagination: Pagination = Depends(),
-        order_by: List[str] = Query(
-            None,
-            title='排序字段',
-            description='允许传入多个字段，按顺序排序，如 ?order_by=name&order_by=age'
-        )
+        order_by: List[str] = Query(None, title='排序字段', description='允许传入多个字段，按顺序排序')
 ):
-    total, accounts = await service.list_accounts(
-        filters=filters,
-        page=pagination.page,
-        size=pagination.size,
-        order_by=order_by,
-    )
-
-    return PageResponse[AccountResponse](total=total, items=accounts)
+    current_user: UserModel = request.state.user
+    filters.user_id = current_user.id
+    return await service.list(page=pagination.page, size=pagination.size, filters=filters, order_by=order_by)
 
 
 @router.post(

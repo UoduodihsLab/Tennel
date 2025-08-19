@@ -25,8 +25,9 @@ class BaseCRUD(Generic[ModelType]):
     async def delete(self, pk: Any) -> int:
         return await self.model.filter(pk=pk).delete()
 
-    async def list_filtered(
+    async def list(
             self,
+            *,
             offset: int = 0,
             limit: int = 10,
             filters: Dict[str, Any] = None,

@@ -32,4 +32,5 @@ class CompleteLoginResponse(AccountResponse):
 
 
 class AccountFilter(BaseModel):
+    user_id: int | None = Field(None)
     status: int | None = Field(None)

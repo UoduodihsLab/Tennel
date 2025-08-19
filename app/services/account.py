@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import List
 
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
@@ -14,6 +14,7 @@ from app.schemas.account import (AccountCreate,
                                  AccountFilter,
                                  StartLoginResponse,
                                  AccountCompleteLogin, CompleteLoginResponse)
+from app.schemas.common import PageResponse
 from app.tclient.client import get_static_client_for_phone
 
 logger = logging.getLogger(__name__)
@@ -37,25 +38,20 @@ class AccountService:
 
         return AccountResponse.model_validate(new_account)
 
-    async def list_accounts(
-            self,
-            filters: AccountFilter,
-            page: int,
-            size: int,
-            order_by: List[str] | None = None,
-    ) -> Tuple[int, List[AccountResponse]]:
+    async def list(self, *, page: int, size: int, filters: AccountFilter, order_by: List[str] | None = None, ) -> \
+            PageResponse[AccountResponse]:
         offset = (page - 1) * size
-        filter_dict = filters.model_dump(exclude_unset=True)
-        total, rows = await self.crud.list_filtered(
+        filters_dict = filters.model_dump(exclude_unset=True)
+        total, rows = await self.crud.list(
             offset=offset,
             limit=size,
-            filters=filter_dict,
+            filters=filters_dict,
             order_by=order_by
         )
 
-        accounts = [AccountResponse.model_validate(row) for row in rows]
+        items = [AccountResponse.model_validate(row) for row in rows]
 
-        return total, accounts
+        return PageResponse[AccountResponse](total=total, items=items)
 
     async def get_user_account(self, user: UserModel, account_id: int) -> AccountModel:
         account = await self.crud.get_with_user(account_id)
@@ -106,7 +102,8 @@ class AccountService:
         account_info = None
         try:
             await self.ensure_not_authenticated(client, account)
-            await client.sign_in(phone=account.phone, code=data_to_complete.code, phone_code_hash=data_to_complete.phone_code_hash)
+            await client.sign_in(phone=account.phone, code=data_to_complete.code,
+                                 phone_code_hash=data_to_complete.phone_code_hash)
         except SessionPasswordNeededError as e:
             logger.error(e)
             await client.sign_in(password=account.two_fa)

@@ -30,20 +30,9 @@ async def create_user(user_in: UserCreate):
 async def read_users(
         filters: UserFilter = Depends(),
         pagination: Pagination = Depends(),
-        order_by: List[str] = Query(
-            None,
-            title='排序字段',
-            description='允许传入多个字段，按顺序排序，如 ?order_by=name&order_by=age'
-        ),
+        order_by: List[str] = Query(None, title='排序字段', description='允许传入多个字段，按顺序排序')
 ):
-    total, users = await service.list_users(
-        filters=filters,
-        page=pagination.page,
-        size=pagination.size,
-        order_by=order_by,
-    )
-
-    return PageResponse[UserResponse](total=total, items=users)
+    return await service.list(page=pagination.page, size=pagination.size, filters=filters, order_by=order_by)
 
 
 @router.get('/{user_id}', response_model=UserResponse, status_code=status.HTTP_200_OK, summary='获取单个用户信息')

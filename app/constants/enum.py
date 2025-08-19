@@ -6,11 +6,6 @@ class UserRoleEnum(IntEnum):
     USER = 2
 
 
-class ChannelStatus(IntEnum):
-    UNSYNCED = 1
-    SYNCED = 2
-
-
 class AccountRole(IntEnum):
     OWNER = 1
     ADMIN = 2
