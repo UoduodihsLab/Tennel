@@ -15,7 +15,7 @@ from app.schemas.account import (AccountCreate,
                                  StartLoginResponse,
                                  AccountCompleteLogin, CompleteLoginResponse)
 from app.schemas.common import PageResponse
-from app.tclient.client import get_static_client_for_phone
+from app.core.telegram_client import get_static_client_for_phone
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +53,13 @@ class AccountService:
 
         return PageResponse[AccountResponse](total=total, items=items)
 
-    async def get_user_account(self, user: UserModel, account_id: int) -> AccountModel:
+    async def get_user_account(self, user_id: int, account_id: int) -> AccountModel:
         account = await self.crud.get_with_user(account_id)
 
         if account is None:
             raise NotFoundRecordError('账号不存在')
 
-        if account.user.id != user.id:
+        if account.user.id != user_id:
             raise PermissionDeniedError(f'权限错误: {account.user.username} 没有权限操作账号 {account.id}')
 
         return account
@@ -76,8 +76,8 @@ class AccountService:
         if await client.is_user_authorized():
             raise AlreadyAuthenticatedError(f'账号{account.user.username}已授登录, 请勿重复登录')
 
-    async def start_login(self, user: UserModel, account_id: int) -> StartLoginResponse:
-        account = await self.get_user_account(user, account_id)
+    async def start_login(self, user_id: int, account_id: int) -> StartLoginResponse:
+        account = await self.get_user_account(user_id, account_id)
         client = self.get_account_client(account.phone)
         await client.connect()
 
@@ -91,11 +91,11 @@ class AccountService:
 
     async def complete_login(
             self,
-            user: UserModel,
+            user_id: int,
             account_id,
             data_to_complete: AccountCompleteLogin
     ) -> CompleteLoginResponse:
-        account = await self.get_user_account(user, account_id)
+        account = await self.get_user_account(user_id, account_id)
         client = self.get_account_client(account.phone)
         await client.connect()
 

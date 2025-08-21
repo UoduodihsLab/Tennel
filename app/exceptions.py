@@ -22,3 +22,18 @@ class GetClientError(Exception):
 
 class UpdateRecordError(Exception):
     pass
+
+
+class MuchTooManyChannelsError(Exception):
+    pass
+
+
+class UnsupportedTaskTypeError(Exception):
+    pass
+
+class DeleteRunningTaskError(Exception):
+    pass
+
+
+class DuplicateRunningTaskError(Exception):
+    pass

@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from pydantic import BaseModel, Field
 
@@ -24,11 +24,32 @@ class TaskResponse(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     t_type: TaskType
-    args: Dict[str, Any] | None = Field(None)
+    args: Dict[str, Any] = Field(...)
+    total: int = Field(..., gt=0)
 
 
 class TaskFilter(BaseModel):
     user_id: int | None = Field(None)
     title: str | None = Field(None)
     t_type: TaskType | None = Field(None)
-    args: Dict[str, Any] | None = Field(None)
+
+
+class BatchCreateChannelArgs(BaseModel):
+    account_id: int
+    titles: List[str] = Field(..., min_length=1)
+
+
+class BatchSetChannelUsernameArgs(BaseModel):
+    account_id: int
+    channel_ids: List[int] = Field(..., min_length=1)
+
+
+class BatchSetChannelPhotoArgs(BaseModel):
+    account_id: int
+    channel_ids: List[int] = Field(..., min_length=1)
+
+
+class BatchSetChannelDescriptionArgs(BaseModel):
+    account_id: int
+    channel_ids: List[int] = Field(..., min_length=1)
+    descriptions: List[str] = Field(..., min_length=1)

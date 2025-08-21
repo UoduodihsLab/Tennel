@@ -5,11 +5,11 @@ from app.db.base import BaseModel
 
 
 class TaskModel(BaseModel):
-    title = fields.CharField(unique=True, max_length=255)
+    title = fields.CharField(max_length=255)
     t_type = fields.IntEnumField(TaskType)
     args = fields.JSONField(null=True)
     status = fields.IntEnumField(TaskStatus, default=TaskStatus.PENDING)
-    total = fields.IntField(default=0)
+    total = fields.IntField()
     success = fields.IntField(default=0)
     failure = fields.IntField(default=0)
     logs = fields.TextField(null=True)

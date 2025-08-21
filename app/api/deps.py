@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app.constants.enum import UserRoleEnum
 from app.core.config import settings
+from app.core.telegram_client import ClientManager
 from app.crud.user import UserCRUD
 from app.db.models import UserModel
 
@@ -45,3 +46,7 @@ def require_admin_role(current_user: UserModel = Depends(get_current_user)):
 
 def auth_dependency(request: Request, user=Depends(get_current_user)):
     request.state.user = user
+
+
+def get_client_manager(request: Request) -> ClientManager:
+    return request.app.state.client_manager

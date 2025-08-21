@@ -10,7 +10,7 @@ service = AuthService()
 router = APIRouter(prefix='/auth', tags=['auth'])
 
 
-@router.post('/login')
+@router.post('/login/')
 async def login_endpoint(data: LoginData):
     try:
         return await service.login(data)

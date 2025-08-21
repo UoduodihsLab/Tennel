@@ -51,7 +51,7 @@ async def read_accounts(
 
 
 @router.post(
-    '/{account_id}/start-login',
+    '/{account_id}/start-login/',
     response_model=StartLoginResponse,
     status_code=status.HTTP_200_OK,
     summary="Start login"
@@ -60,7 +60,7 @@ async def start_login(request: Request, account_id: int):
     current_user: UserModel = request.state.user
 
     try:
-        return await service.start_login(current_user, account_id)
+        return await service.start_login(current_user.id, account_id)
     except PermissionDeniedError as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
@@ -79,7 +79,7 @@ async def complete_login(request: Request, account_id: int, data: AccountComplet
     current_user: UserModel = request.state.user
 
     try:
-        return await service.complete_login(current_user, account_id, data)
+        return await service.complete_login(current_user.id, account_id, data)
     except PermissionDeniedError as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))

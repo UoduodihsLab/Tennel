@@ -1,8 +1,22 @@
+import logging
+import random
 from typing import List
 
+from app.constants.enum import TaskStatus
+from app.constants.enum import TaskType
+from app.core.config import settings
+from app.core.telegram_client import ClientManager
+from app.crud.account import AccountCRUD
+from app.crud.account_channel import AccountChannelCRUD
 from app.crud.task import TaskCRUD
+from app.db.models.task import TaskModel
+from app.exceptions import NotFoundRecordError, MuchTooManyChannelsError, UnsupportedTaskTypeError, \
+    DeleteRunningTaskError, DuplicateRunningTaskError
 from app.schemas.common import PageResponse
-from app.schemas.task import TaskFilter, TaskResponse, TaskCreate
+from app.schemas.task import TaskFilter, TaskResponse, TaskCreate, BatchCreateChannelArgs
+from app.task.queues import queue_manager
+
+logger = logging.getLogger(__name__)
 
 
 class TaskService:
@@ -13,6 +27,7 @@ class TaskService:
             PageResponse[TaskResponse]:
         offset = (page - 1) * size
         filters_dict = filters.model_dump()
+        logger.info(filters_dict)
         total, rows = await self.crud.list(
             offset=offset,
             limit=size,
@@ -24,23 +39,139 @@ class TaskService:
 
         return PageResponse[TaskResponse](total=total, items=items)
 
-    async def create_task(self, user_id: int, data_to_create: TaskCreate) -> TaskResponse:
-        dict_to_create = data_to_create.model_dump()
+    async def create_channel_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
+        args = BatchCreateChannelArgs.model_validate(data.args)
+
+        account_id = args.account_id
+        total = data.total
+
+        # TODO: 查询是否有相同账号的创建频道的任务, 如果存在则不创建
+
+        account = await AccountCRUD().get(account_id)
+        if account is None:
+            raise NotFoundRecordError(f'未查询到此账号: {account_id}')
+
+        created_count = await AccountChannelCRUD().count_channels_by_account(account.id)
+        remaining_count = settings.MAX_CHANNELS_COUNT_PER_ACCOUNT - created_count
+
+        if total > remaining_count:
+            raise MuchTooManyChannelsError(
+                f'请求创建的频道数量超出当前账号剩余可创建频道数量: 当前剩余: {remaining_count}')
+
+        dict_to_create = data.model_dump()
+        logger.info(dict_to_create)
         dict_to_create.update({'user_id': user_id})
+
         new_task = await self.crud.create(dict_to_create)
+
         return TaskResponse.model_validate(new_task)
 
-    async def emit_batch_update_username_task(self):
+    async def create_set_channel_username_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
         pass
 
-    async def emit_batch_create_channel_task(self):
+    async def create_set_channel_photo_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
         pass
 
-    async def emit_batch_update_about_task(self):
+    async def create_set_channel_description_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
         pass
 
-    async def emit_batch_update_channel_about_task(self):
+    async def create_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
+        t_type = data.t_type
+
+        if t_type == TaskType.CREATE_CHANNEL:
+            return await self.create_channel_task(user_id, data)
+        if t_type == TaskType.SET_USERNAME:
+            return await self.create_set_channel_username_task(user_id, data)
+        if t_type == TaskType.SET_PHOTO:
+            return await self.create_set_channel_photo_task(user_id, data)
+        if t_type == TaskType.SET_DESCRIPTION:
+            return await self.create_set_channel_description_task(user_id, data)
+
+        raise UnsupportedTaskTypeError('不支持的任务类型')
+
+    async def start_batch_create_channel(self, user_id: int, task_schema: TaskResponse, client_manager: ClientManager):
+        args = task_schema.args
+        total = task_schema.total
+        titles = args['titles']
+        account_id = args.get('account_id')
+
+        account = await AccountCRUD().get(account_id)
+        if account is None:
+            raise NotFoundRecordError(f'查无此账号: {account_id}')
+
+        session_name = account.session_name
+        titles_count = len(titles)
+        titles_copy = titles[:]
+
+        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
+
+        for _ in range(total):
+            if titles_count >= total:
+                title = titles_copy.pop()
+            else:
+                title = random.choice(titles_copy)
+
+            task_data = (user_id, task_schema.id, client_manager, session_name, title)
+            queue_manager.create_channel_queue.put_nowait(task_data)
+
+    async def start_batch_set_channel_username(self, user_id: int, task_schema: TaskResponse,
+                                               client_manager: ClientManager):
         pass
 
-    async def emit_batch_update_photo_task(self):
+    async def start_batch_set_channel_photo(self, user_id: int, task_schema: TaskResponse,
+                                            client_manager: ClientManager):
         pass
+
+    async def start_batch_set_channel_description(self, user_id: int, task_schema: TaskResponse,
+                                                  client_manager: ClientManager):
+        pass
+
+    async def start_task(self, task_id: int, user_id: int, client_manager: ClientManager):
+        task = await self.crud.get_with_user_id(task_id, user_id)
+        if task is None:
+            raise NotFoundRecordError(f'任务 {task_id} 不存在')
+
+        if task.status != TaskStatus.PENDING:
+            raise DuplicateRunningTaskError('不可重复运行同一个任务')
+
+        task_schema = TaskResponse.model_validate(task)
+        task_type = task_schema.t_type
+        if task_type == TaskType.CREATE_CHANNEL:
+            return await self.start_batch_create_channel(user_id, task_schema, client_manager)
+
+        if task_type == TaskType.SET_USERNAME:
+            return await self.start_batch_set_channel_username(user_id, task_schema, client_manager)
+
+        if task_type == TaskType.SET_PHOTO:
+            return await self.start_batch_set_channel_photo(user_id, task_schema, client_manager)
+
+        if task_type == TaskType.SET_DESCRIPTION:
+            return await self.start_batch_set_channel_description(user_id, task_schema, client_manager)
+
+        raise UnsupportedTaskTypeError('不支持的任务类型')
+
+    async def delete_task(self, task_id: int, user_id: int):
+        task = await self.crud.get_with_user_id(task_id, user_id)
+
+        if task is None:
+            raise NotFoundRecordError(f'查无此任务: {task_id}')
+
+        if task.status == TaskStatus.RUNNING:
+            raise DeleteRunningTaskError('当前任务正在运行, 请等待任务运行完毕后重试')
+
+        await self.crud.delete(task_id)
+
+    async def update_task_status_with_increment_success_and_log(self, task_id: int, log: str):
+        await self.crud.increment_success(task_id)
+        await self.crud.append_log(task_id, log)
+
+        task: TaskModel | None = await self.crud.get(task_id)
+        if task.success + task.failure == task.total:
+            await self.crud.update(task_id, {'status': TaskStatus.COMPLETED})
+
+    async def update_task_status_with_increment_failure_and_log(self, task_id: int, log: str):
+        await self.crud.increment_failure(task_id)
+        await self.crud.append_log(task_id, log)
+        task: TaskModel | None = await self.crud.get(task_id)
+        if task.success + task.failure == task.total:
+            await self.crud.update(task_id, {'status': TaskStatus.COMPLETED})

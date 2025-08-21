@@ -16,8 +16,9 @@ class TaskType(IntEnum):
     CREATE_CHANNEL = 1
     SET_USERNAME = 2
     SET_PHOTO = 3
-    SET_ACCOUNT = 4
-    SET_TITLE = 5
+    SET_DESCRIPTION = 4
+    SET_ACCOUNT = 5
+    SET_TITLE = 6
 
 
 class TaskStatus(IntEnum):

@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     TOKEN_SECRET_KEY: str
     TOKEN_ALGORITHM: str
 
+    MAX_CHANNELS_COUNT_PER_ACCOUNT: int = 10
+
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',
         env_file_encoding='utf-8',

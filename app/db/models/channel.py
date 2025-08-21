@@ -5,13 +5,13 @@ from app.db.base import BaseModel
 
 
 class ChannelModel(BaseModel):
-    tid = fields.BigIntField(unique=True)
-    title = fields.CharField(unique=True, max_length=255)
+    tid = fields.BigIntField(unique=True, null=True)
+    title = fields.CharField(unique=True, max_length=255, null=True)
     username = fields.CharField(unique=True, max_length=64, null=True)
     photo_name = fields.TextField(null=True)
-    about = fields.TextField(null=True)
+    description = fields.TextField(null=True)
 
-    lang = fields.CharField(max_length=16)
+    lang = fields.CharField(max_length=16, null=True)
     primary_links = fields.JSONField(null=True)
 
     is_banned = fields.BooleanField(default=False)
