@@ -24,17 +24,17 @@ class AccountService:
     def __init__(self):
         self.crud = AccountCRUD()
 
-    async def create_account(self, user_id: int, create_data: AccountCreate):
-        created_account = await self.crud.get_by_phone(create_data.phone)
+    async def create_account(self, user_id: int, data_to_create: AccountCreate):
+        created_account = await self.crud.get_by_phone(data_to_create.phone)
 
         if created_account:
             raise AlreadyExistError('此账号已存在，请勿重复添加')
 
-        create_dict = create_data.model_dump()
+        dict_to_create = data_to_create.model_dump()
 
-        create_dict.update({'session_name': create_data.phone, 'user_id': user_id})
+        dict_to_create.update({'session_name': data_to_create.phone, 'user_id': user_id})
 
-        new_account = await self.crud.create(create_dict)
+        new_account = await self.crud.create(dict_to_create)
 
         return AccountResponse.model_validate(new_account)
 

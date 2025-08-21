@@ -5,7 +5,7 @@ from typing import List
 
 from app.db.models import UserModel
 from app.schemas.common import PageResponse, Pagination
-from app.schemas.task import TaskResponse, TaskFilter
+from app.schemas.task import TaskResponse, TaskFilter, TaskCreate
 from app.services.task import TaskService
 
 logger = logging.getLogger(__name__)
@@ -17,6 +17,16 @@ router = APIRouter(
     tags=["Tasks"],
     dependencies=[Depends(auth_dependency)]
 )
+
+@router.post(
+    '/',
+    response_model=TaskResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary='Create a new task'
+)
+async def create_new_task(request: Request, data_to_create: TaskCreate):
+    current_user: UserModel = request.state.user
+    return await service.create_task(current_user.id, data_to_create)
 
 
 @router.get(

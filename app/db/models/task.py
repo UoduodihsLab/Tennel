@@ -9,7 +9,7 @@ class TaskModel(BaseModel):
     t_type = fields.IntEnumField(TaskType)
     args = fields.JSONField(null=True)
     status = fields.IntEnumField(TaskStatus, default=TaskStatus.PENDING)
-    total = fields.IntField()
+    total = fields.IntField(default=0)
     success = fields.IntField(default=0)
     failure = fields.IntField(default=0)
     logs = fields.TextField(null=True)

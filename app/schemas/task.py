@@ -11,7 +11,6 @@ class TaskResponse(BaseModel):
     t_type: TaskType
     args: Dict[str, Any] | None = Field(None)
     status: TaskStatus
-    status: TaskStatus
     total: int
     success: int
     failure: int
