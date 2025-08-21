@@ -7,7 +7,6 @@ from typing import List, Dict
 from telethon import TelegramClient, types, functions
 
 from app.core.config import settings
-from app.exceptions import GetClientError
 
 
 class ClientManager:
