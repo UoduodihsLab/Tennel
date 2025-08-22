@@ -2,7 +2,7 @@ from typing import List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app.constants.enum import ScheduleType
+from app.constants.enum import ScheduleType, ScheduleStatus
 from app.core.telegram_client import ClientManager
 from app.crud.schedule import ScheduleCRUD
 from app.db.models.schedule import ScheduleModel
@@ -73,7 +73,11 @@ class ScheduleService:
                 },
                 id=f'publish_message_main_{schedule_record.id}'
             )
+            await self.crud.update(schedule_record.id, {'status': ScheduleStatus.RUNNING})
 
             return True
 
         raise UnsupportedSchedulerTypeError('不支持的定时任务类型')
+
+    async def stop_all_schedules(self):
+        pass
