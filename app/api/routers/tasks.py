@@ -32,7 +32,7 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     summary='Create a new task'
 )
-async def create_new_task(request: Request, data_to_create: TaskCreate):
+async def create_task(request: Request, data_to_create: TaskCreate):
     current_user: UserModel = request.state.user
     return await service.create_task(current_user.id, data_to_create)
 

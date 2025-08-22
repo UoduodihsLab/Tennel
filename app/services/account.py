@@ -4,9 +4,9 @@ from typing import List
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 
+from app.core.telegram_client import get_static_client_for_phone
 from app.crud.account import AccountCRUD
 from app.db.models.account import AccountModel
-from app.db.models.user import UserModel
 from app.exceptions import AlreadyExistError, AlreadyAuthenticatedError, GetClientError, UpdateRecordError
 from app.exceptions import NotFoundRecordError, PermissionDeniedError
 from app.schemas.account import (AccountCreate,
@@ -15,7 +15,6 @@ from app.schemas.account import (AccountCreate,
                                  StartLoginResponse,
                                  AccountCompleteLogin, CompleteLoginResponse)
 from app.schemas.common import PageResponse
-from app.core.telegram_client import get_static_client_for_phone
 
 logger = logging.getLogger(__name__)
 

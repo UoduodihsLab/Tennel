@@ -1,12 +1,12 @@
 from typing import List
 
 from pydantic import BaseModel, Field
-from app.constants.enum import UserRoleEnum
+from app.constants.enum import UserRole
 
 
 class UserBase(BaseModel):
     username: str
-    role: UserRoleEnum
+    role: UserRole
 
 
 class UserCreate(UserBase):
@@ -37,4 +37,4 @@ class UserListResponse(BaseModel):
 
 class UserFilter(BaseModel):
     username: str | None = Field(None, description='按用户名搜索')
-    role: UserRoleEnum | None = Field(None, description='按角色精确匹配')
+    role: UserRole | None = Field(None, description='按角色精确匹配')

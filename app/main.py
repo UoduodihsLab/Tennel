@@ -3,12 +3,13 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from tortoise.contrib.fastapi import register_tortoise
 
-from app.api.routers.accounts import router as account_router
+from app.api.routers.accounts import router as accounts_router
 from app.api.routers.auth import router as auth_router
-from app.api.routers.channels import router as channel_router
+from app.api.routers.channels import router as channels_router
 from app.api.routers.medias import router as medias_router
-from app.api.routers.tasks import router as task_router
-from app.api.routers.users import router as user_router
+from app.api.routers.schedules import router as schedules_router
+from app.api.routers.tasks import router as tasks_router
+from app.api.routers.users import router as users_router
 from app.core.lifespan import lifespan
 from app.core.logging_config import setup_logging
 from app.db.tortoise_config import TORTOISE_ORM
@@ -34,12 +35,13 @@ async def existing_exception_handler(request: Request, exc: AlreadyExistError):
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={'detail': str(exc)})
 
 
-app.include_router(user_router)
+app.include_router(users_router)
 app.include_router(auth_router)
-app.include_router(account_router)
-app.include_router(channel_router)
-app.include_router(task_router)
+app.include_router(accounts_router)
+app.include_router(channels_router)
+app.include_router(tasks_router)
 app.include_router(medias_router)
+app.include_router(schedules_router)
 
 register_tortoise(
     app,

@@ -40,6 +40,9 @@ class Settings(BaseSettings):
 
     TASK_INTERVAL_TIME: int = 5
 
+    AI_API_KEY: str = 'sk-202fd5e42b7b4e7dbe1592218dbe3a72',
+    AI_API_URL: str = 'https://api.deepseek.com/chat/completions',
+
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',
         env_file_encoding='utf-8',

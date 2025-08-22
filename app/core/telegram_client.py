@@ -196,6 +196,12 @@ async def set_channel_description(client: TelegramClient, tid: int, access_hash:
 
     return True
 
+async def send_message_to_channel(client: TelegramClient, tid: int, message: str):
+    pass
+
+async def send_file_to_channel(client: TelegramClient, tid: int, media_list: List[str], caption: str):
+    pass
+
 
 async def sync_channels_to_db(session_name: str):
     pass

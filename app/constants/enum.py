@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 
-class UserRoleEnum(IntEnum):
+class UserRole(IntEnum):
     ADMIN = 1
     USER = 2
 
@@ -31,3 +31,12 @@ class MediaType(IntEnum):
     AVATAR = 1
     IMAGE = 2
     VIDEO = 3
+
+
+class ScheduleType(IntEnum):
+    PUBLISH_MESSAGE = 1
+    SYNC_CHANNELS = 2
+
+class ScheduleStatus(IntEnum):
+    PENDING = 1
+    RUNNING = 2

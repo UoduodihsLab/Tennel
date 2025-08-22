@@ -45,3 +45,7 @@ class UnsupportedMediaTypeError(Exception):
 
 class MediaTooLargeError(Exception):
     pass
+
+
+class UnsupportedSchedulerTypeError(Exception):
+    pass

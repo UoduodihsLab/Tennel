@@ -1,10 +1,11 @@
 import logging
 
 import jwt
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 
-from app.constants.enum import UserRoleEnum
+from app.constants.enum import UserRole
 from app.core.config import settings
 from app.core.telegram_client import ClientManager
 from app.crud.user import UserCRUD
@@ -38,7 +39,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserModel:
 
 
 def require_admin_role(current_user: UserModel = Depends(get_current_user)):
-    if current_user.role != UserRoleEnum.ADMIN:
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="非管理员权限")
 
     return current_user
@@ -50,3 +51,7 @@ def auth_dependency(request: Request, user=Depends(get_current_user)):
 
 def get_client_manager(request: Request) -> ClientManager:
     return request.app.state.client_manager
+
+
+def get_scheduler(request: Request) -> AsyncIOScheduler:
+    return request.app.state.scheduler
