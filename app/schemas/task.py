@@ -50,4 +50,4 @@ class BatchSetChannelPhotoArgs(BaseModel):
 
 class BatchSetChannelDescriptionArgs(BaseModel):
     channel_ids: List[int] = Field(..., min_length=1)
-    descriptions: List[str] = Field(..., min_length=1)
+    description: str

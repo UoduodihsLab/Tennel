@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from app.core.config import settings
 from .queues import queue_manager
 from .tasks import process_create_channel, process_set_channel_username, process_set_channel_photo, \
     process_set_channel_description
@@ -18,7 +19,7 @@ async def create_channel_worker():
         except Exception as e:
             logger.error(f'Failed to create channel worker: {e}')
             queue_manager.create_channel_queue.task_done()
-            await asyncio.sleep(1)
+            await asyncio.sleep(settings.TASK_INTERVAL_TIME)
 
 
 async def set_channel_username_worker():
@@ -31,7 +32,7 @@ async def set_channel_username_worker():
         except Exception as e:
             logger.error(f'Failed to set channel username worker: {e}')
             queue_manager.set_channel_username_queue.task_done()
-            await asyncio.sleep(1)
+            await asyncio.sleep(settings.TASK_INTERVAL_TIME)
 
 
 async def set_channel_photo_worker():
@@ -44,7 +45,7 @@ async def set_channel_photo_worker():
         except Exception as e:
             logger.error(f'Failed to set channel photo worker: {e}')
             queue_manager.set_channel_photo_queue.task_done()
-            await asyncio.sleep(1)
+            await asyncio.sleep(settings.TASK_INTERVAL_TIME)
 
 
 async def set_channel_description_worker():
@@ -57,4 +58,4 @@ async def set_channel_description_worker():
         except Exception as e:
             logger.error(f'Failed to set channel description worker: {e}')
             queue_manager.set_channel_description_queue.task_done()
-            await asyncio.sleep(1)
+            await asyncio.sleep(settings.TASK_INTERVAL_TIME)

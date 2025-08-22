@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     VIDEO_MAX_SIZE: int = 100 * 1024 * 1024
     IMG_MAX_SIZE: int = 15 * 1024 * 1024
 
+    TASK_INTERVAL_TIME: int = 5
+
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',
         env_file_encoding='utf-8',
