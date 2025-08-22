@@ -13,8 +13,7 @@ async def create_channel_worker():
     while True:
         try:
             task_data = await queue_manager.create_channel_queue.get()
-            user_id, task_id, client_manager, session_name, title = task_data
-            await process_create_channel(user_id, task_id, client_manager, session_name, title)
+            await process_create_channel(*task_data)
             queue_manager.create_channel_queue.task_done()
         except Exception as e:
             logger.error(f'Failed to create channel worker: {e}')
@@ -27,15 +26,7 @@ async def set_channel_username_worker():
     while True:
         try:
             task_data = await queue_manager.set_channel_username_queue.get()
-            task_id, client_manager, session_name, channel_tid, access_hash, username = task_data
-            await process_set_channel_username(
-                task_id,
-                client_manager,
-                session_name,
-                channel_tid,
-                access_hash,
-                username
-            )
+            await process_set_channel_username(*task_data)
             queue_manager.set_channel_username_queue.task_done()
         except Exception as e:
             logger.error(f'Failed to set channel username worker: {e}')
@@ -48,8 +39,7 @@ async def set_channel_photo_worker():
     while True:
         try:
             task_data = await queue_manager.set_channel_photo_queue.get()
-            task_id, client_manager, session_name, channel_tid, access_hash, photo_url = task_data
-            await process_set_channel_photo(task_id, client_manager, session_name, channel_tid, access_hash, photo_url)
+            await process_set_channel_photo(*task_data)
             queue_manager.set_channel_photo_queue.task_done()
         except Exception as e:
             logger.error(f'Failed to set channel photo worker: {e}')
@@ -62,9 +52,7 @@ async def set_channel_description_worker():
     while True:
         try:
             task_data = await queue_manager.set_channel_description_queue.get()
-            task_id, client_manager, session_name, channel_tid, access_hash, description = task_data
-            await process_set_channel_description(task_id, client_manager, session_name, channel_tid, access_hash,
-                                                  description)
+            await process_set_channel_description(*task_data)
             queue_manager.set_channel_description_queue.task_done()
         except Exception as e:
             logger.error(f'Failed to set channel description worker: {e}')

@@ -14,7 +14,9 @@ from app.db.models.task import TaskModel
 from app.exceptions import NotFoundRecordError, MuchTooManyChannelsError, UnsupportedTaskTypeError, \
     DeleteRunningTaskError, DuplicateRunningTaskError
 from app.schemas.common import PageResponse
-from app.schemas.task import TaskFilter, TaskResponse, TaskCreate, BatchCreateChannelArgs, BatchSetChannelUsernameArgs
+from app.schemas.task import TaskFilter, TaskResponse, TaskCreate, BatchCreateChannelArgs, BatchSetChannelUsernameArgs, \
+    BatchSetChannelPhotoArgs
+from app.services.media import MediaService
 from app.task.queues import queue_manager
 from app.utils.channel_tools import generate_username
 
@@ -80,7 +82,16 @@ class TaskService:
         return TaskResponse.model_validate(new_task)
 
     async def create_set_channel_photo_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
-        pass
+        args = BatchSetChannelPhotoArgs.model_validate(data.args)
+
+        if data.total != len(args.channel_ids):
+            raise ValueError('请求任务操作总数与实际选中的频道数量不符')
+
+        dict_to_create = data.model_dump()
+        dict_to_create.update({'user_id': user_id})
+        new_task = await self.crud.create(dict_to_create)
+
+        return TaskResponse.model_validate(new_task)
 
     async def create_set_channel_description_task(self, user_id: int, data: TaskCreate) -> TaskResponse:
         pass
@@ -159,7 +170,30 @@ class TaskService:
             task_schema: TaskResponse,
             client_manager: ClientManager
     ):
-        pass
+        args = task_schema.args
+        c2a_list: List[AccountChannelModel] = []
+        channel_ids = args['channel_ids']
+        for cid in channel_ids:
+            c2a: AccountChannelModel | None = await AccountChannelCRUD().get_with_channel_account(cid)
+            if c2a is None:
+                raise NotFoundRecordError(f'未查询到此频道相关记录: {cid}')
+
+            c2a_list.append(c2a)
+
+        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
+
+        for c2a in c2a_list:
+            photo_filename = await MediaService().get_random_avatar()
+            photo_path = str(settings.MEDIA_ROOT / photo_filename)
+            task_data = (
+                task_schema.id,
+                client_manager,
+                c2a.account.session_name,
+                c2a.channel.tid,
+                c2a.access_hash,
+                photo_path,
+            )
+            queue_manager.set_channel_photo_queue.put_nowait(task_data)
 
     async def start_batch_set_channel_description(
             self,

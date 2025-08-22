@@ -12,6 +12,7 @@ from app.exceptions import UnsupportedMediaTypeError, MediaTooLargeError
 from app.schemas.common import PageResponse
 from app.schemas.media import MediaFilter, MediaResponse
 from app.utils.media_tools import generate_filename, save_file_async
+import random
 
 
 class MediaService:
@@ -144,3 +145,10 @@ class MediaService:
             return await self.create_video(user_id, file)
 
         raise UnsupportedMediaTypeError('不支持的媒体类型')
+
+    async def get_random_avatar(self):
+        paths_list = await self.crud.get_filenames_by_m_type(MediaType.AVATAR)
+
+        return random.choice(paths_list)
+
+

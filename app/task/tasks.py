@@ -1,7 +1,8 @@
 import logging
 
 from app.constants.enum import AccountRole
-from app.core.telegram_client import ClientManager, create_channel, set_channel_username
+from app.core.telegram_client import ClientManager, create_channel, set_channel_username, set_channel_photo, \
+    set_channel_description
 from app.services.channel import ChannelService
 from app.services.task import TaskService
 
@@ -60,20 +61,37 @@ async def process_set_channel_username(
 async def process_set_channel_photo(
         task_id: int,
         client_manager: ClientManager,
-        session_path: str,
+        session_name: str,
         channel_tid: int,
         access_hash: int,
-        photo_url: str,
+        photo_path: str,
 ):
-    pass
+    try:
+        async with client_manager.get_client(session_name) as client:
+            await set_channel_photo(client, channel_tid, access_hash, photo_path)
+            log = f'任务 {task_id} 设置频道 {channel_tid} photo: {photo_path} 成功'
+            await TaskService().update_task_status_with_increment_success_and_log(task_id, log)
+    except Exception as e:
+        log = f'任务 {task_id} 设置频道 {channel_tid} photo: {photo_path} 失败: {e}'
+        await TaskService().update_task_status_with_increment_failure_and_log(task_id, log)
+        logger.error(log)
 
 
 async def process_set_channel_description(
         task_id: int,
         client_manager: ClientManager,
-        session_path: str,
-        channel_id: int,
+        session_name: str,
+        channel_tid: int,
         access_hash: int,
         description: str,
 ):
-    pass
+    try:
+        async with client_manager.get_client(session_name) as client:
+            await set_channel_description(client, channel_tid, access_hash, description)
+            log = f'任务 {task_id} 设置频道 {channel_tid} description: {description} 成功'
+            await TaskService().update_task_status_with_increment_success_and_log(task_id, log)
+            logger.info(log)
+    except Exception as e:
+        log = f'任务 {task_id} 设置频道 {channel_tid} description: {description} 失败: {e}'
+        await TaskService().update_task_status_with_increment_failure_and_log(task_id, log)
+        logger.error(log)

@@ -32,6 +32,7 @@ class TaskFilter(BaseModel):
     user_id: int | None = Field(None)
     title: str | None = Field(None)
     t_type: TaskType | None = Field(None)
+    status: TaskStatus | None = Field(None)
 
 
 class BatchCreateChannelArgs(BaseModel):
