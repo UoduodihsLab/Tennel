@@ -40,16 +40,13 @@ class BatchCreateChannelArgs(BaseModel):
 
 
 class BatchSetChannelUsernameArgs(BaseModel):
-    account_id: int
     channel_ids: List[int] = Field(..., min_length=1)
 
 
 class BatchSetChannelPhotoArgs(BaseModel):
-    account_id: int
     channel_ids: List[int] = Field(..., min_length=1)
 
 
 class BatchSetChannelDescriptionArgs(BaseModel):
-    account_id: int
     channel_ids: List[int] = Field(..., min_length=1)
     descriptions: List[str] = Field(..., min_length=1)

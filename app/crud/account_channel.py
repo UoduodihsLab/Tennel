@@ -8,3 +8,6 @@ class AccountChannelCRUD(BaseCRUD):
 
     async def count_channels_by_account(self, account_id: int) -> int:
         return await self.model.filter(account_id=account_id).count()
+
+    async def get_with_channel_account(self, channel_id: int) -> AccountModel | None:
+        return await self.model.filter(channel_id=channel_id).select_related('channel', 'account').first()

@@ -28,10 +28,15 @@ async def set_channel_username_worker():
         try:
             task_data = await queue_manager.set_channel_username_queue.get()
             task_id, client_manager, session_name, channel_tid, access_hash, username = task_data
-            await process_set_channel_username(task_id, client_manager, session_name, channel_tid, access_hash,
-                                               username)
+            await process_set_channel_username(
+                task_id,
+                client_manager,
+                session_name,
+                channel_tid,
+                access_hash,
+                username
+            )
             queue_manager.set_channel_username_queue.task_done()
-            queue_manager.setusername_queue.task_done()
         except Exception as e:
             logger.error(f'Failed to set channel username worker: {e}')
             queue_manager.set_channel_username_queue.task_done()
