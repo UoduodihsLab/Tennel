@@ -37,3 +37,11 @@ class DeleteRunningTaskError(Exception):
 
 class DuplicateRunningTaskError(Exception):
     pass
+
+
+class UnsupportedMediaTypeError(Exception):
+    pass
+
+
+class MediaTooLargeError(Exception):
+    pass

@@ -25,3 +25,9 @@ class TaskStatus(IntEnum):
     PENDING = 1
     RUNNING = 2
     COMPLETED = 3
+
+
+class MediaType(IntEnum):
+    AVATAR = 1
+    IMAGE = 2
+    VIDEO = 3

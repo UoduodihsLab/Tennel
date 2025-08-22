@@ -6,8 +6,9 @@ from tortoise.contrib.fastapi import register_tortoise
 from app.api.routers.accounts import router as account_router
 from app.api.routers.auth import router as auth_router
 from app.api.routers.channels import router as channel_router
-from app.api.routers.users import router as user_router
+from app.api.routers.medias import router as medias_router
 from app.api.routers.tasks import router as task_router
+from app.api.routers.users import router as user_router
 from app.core.lifespan import lifespan
 from app.core.logging_config import setup_logging
 from app.db.tortoise_config import TORTOISE_ORM
@@ -38,6 +39,7 @@ app.include_router(auth_router)
 app.include_router(account_router)
 app.include_router(channel_router)
 app.include_router(task_router)
+app.include_router(medias_router)
 
 register_tortoise(
     app,

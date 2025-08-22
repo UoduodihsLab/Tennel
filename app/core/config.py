@@ -1,6 +1,6 @@
 # app/core/config.py
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     TOKEN_ALGORITHM: str
 
     MAX_CHANNELS_COUNT_PER_ACCOUNT: int = 10
+
+    MEDIA_ROOT: Path = BASE_DIR / 'media'
+    ALLOWED_IMAGE_TYPES: List[str] = ["image/jpeg", "image/png", 'image/jpg']
+    ALLOWED_VIDEO_TYPES: List[str] = ['video/mp4']
+    VIDEO_MAX_SIZE: int = 100 * 1024 * 1024
+    IMG_MAX_SIZE: int = 15 * 1024 * 1024
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',

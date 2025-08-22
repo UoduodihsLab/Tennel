@@ -5,3 +5,4 @@ logs/
 migrations/
 pyproject.toml
 sessions/
+media/
