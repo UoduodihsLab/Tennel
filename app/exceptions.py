@@ -2,6 +2,10 @@ class NotFoundRecordError(Exception):
     pass
 
 
+class UserPasswordError(Exception):
+    pass
+
+
 class AlreadyExistError(Exception):
     pass
 
