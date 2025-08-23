@@ -17,7 +17,7 @@ service = AccountService()
 
 router = APIRouter(
     prefix="/accounts",
-    tags=["Accounts"],
+    tags=["Account"],
     dependencies=[Depends(auth_dependency)],
 )
 

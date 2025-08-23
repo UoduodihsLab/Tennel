@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/schedules",
-    tags=["Schedules"],
+    tags=["Schedule"],
     dependencies=[Depends(auth_dependency)],
 )
 

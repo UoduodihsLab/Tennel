@@ -11,7 +11,7 @@ service = UserService()
 
 router = APIRouter(
     prefix="/users",
-    tags=["Users"],
+    tags=["Admin"],
     dependencies=[Depends(require_admin_role)]
 )
 

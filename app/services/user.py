@@ -20,7 +20,7 @@ class UserService:
         return UserResponse.model_validate(user)
 
     async def list(self, *, page: int, size: int, filters: UserFilter, order_by: List[str] | None = None) -> \
-    PageResponse[UserResponse]:
+            PageResponse[UserResponse]:
         offset = (page - 1) * size
         filter_dict = filters.model_dump(exclude_unset=True)
         total, rows = await self.crud.list(offset=offset, limit=size, filters=filter_dict, order_by=order_by)

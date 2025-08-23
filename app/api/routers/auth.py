@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 service = AuthService()
 
-router = APIRouter(prefix='/auth', tags=['auth'])
+router = APIRouter(prefix='/auth', tags=['Auth'])
 
 
 @router.post('/login/')

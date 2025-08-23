@@ -12,7 +12,7 @@ service = ChannelService()
 
 router = APIRouter(
     prefix="/channels",
-    tags=["Channels"],
+    tags=["Channel"],
     dependencies=[Depends(auth_dependency)]
 )
 

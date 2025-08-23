@@ -21,7 +21,7 @@ service = TaskService()
 
 router = APIRouter(
     prefix="/tasks",
-    tags=["Tasks"],
+    tags=["Task"],
     dependencies=[Depends(auth_dependency)]
 )
 

@@ -16,7 +16,7 @@ service = MediaService()
 
 router = APIRouter(
     prefix="/medias",
-    tags=["Medias"],
+    tags=["Media"],
     dependencies=[Depends(auth_dependency)]
 )
 
