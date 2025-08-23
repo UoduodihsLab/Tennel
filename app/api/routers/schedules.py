@@ -60,6 +60,57 @@ async def start_schedule(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
+@router.post(
+    '/{schedule_id}/stop/',
+    status_code=status.HTTP_200_OK,
+    summary='Stop schedule',
+)
+async def stop_schedule(request: Request, schedule_id: int, scheduler: AsyncIOScheduler = Depends(get_scheduler)):
+    try:
+        current_user: UserModel = request.state.user
+        await service.stop_schedule(current_user.id, schedule_id, scheduler)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'schedule_id': schedule_id})
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post(
+    '/{schedule_id}/resume/',
+    status_code=status.HTTP_200_OK,
+    summary='Resume schedule',
+)
+async def resume_schedule(
+        request: Request,
+        schedule_id: int,
+        scheduler: AsyncIOScheduler = Depends(get_scheduler),
+        client_manager: ClientManager = Depends(get_client_manager)
+):
+    try:
+        current_user: UserModel = request.state.user
+        await service.start_schedule(current_user.id, schedule_id, scheduler, client_manager)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'schedule_id': schedule_id})
+    except Exception as e:
+        logger.error(e)
+        traceback.print_exc()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.delete(
+    '/{schedule_id}/',
+    status_code=status.HTTP_200_OK,
+    summary='Delete schedule'
+)
+async def delete_schedule(request: Request, schedule_id: int, scheduler: AsyncIOScheduler = Depends(get_scheduler)):
+    try:
+        current_user: UserModel = request.state.user
+        await service.delete_schedule(current_user.id, schedule_id, scheduler)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'schedule_id': schedule_id})
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 @router.get(
     '/',
     response_model=PageResponse[ScheduleOut],

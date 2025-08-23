@@ -52,7 +52,7 @@ class ScheduleService:
             user_id: int,
             scheduler: AsyncIOScheduler,
             client_manager: ClientManager
-    ) -> bool:
+    ) -> int:
         schedule_record: ScheduleModel | None = await self.crud.get_join_user_id(schedule_id, user_id)
 
         if schedule_record is None:
@@ -71,13 +71,31 @@ class ScheduleService:
                     'user_id': user_id,
                     **schedule_record.args
                 },
-                id=f'publish_message_main_{schedule_record.id}'
+                id=f'{schedule_record.id}'
             )
             await self.crud.update(schedule_record.id, {'status': ScheduleStatus.RUNNING})
 
-            return True
+            return schedule_record.id
 
         raise UnsupportedSchedulerTypeError('不支持的定时任务类型')
+
+    async def stop_schedule(self, schedule_id: int, user_id: int, scheduler: AsyncIOScheduler) -> int:
+        schedule_record: ScheduleModel | None = await self.crud.get_join_user_id(schedule_id, user_id)
+        if schedule_record is None:
+            raise NotFoundRecordError(f'查无此定时任务 {schedule_id}')
+
+        scheduler.pause_job(f'{schedule_record.id}')
+        await self.crud.update(schedule_record.id, {'status': ScheduleStatus.PENDING})
+        return schedule_record.id
+
+    async def delete_schedule(self, schedule_id: int, user_id: int, scheduler: AsyncIOScheduler) -> bool:
+        schedule_record: ScheduleModel | None = await self.crud.get_join_user_id(schedule_id, user_id)
+        if schedule_record is None:
+            raise NotFoundRecordError(f'查无此任务 {schedule_id}')
+
+        scheduler.remove_job(f'{schedule_record.id}')
+        await self.crud.delete(schedule_record.id)
+        return schedule_record.id
 
     async def stop_all_schedules(self):
         pass

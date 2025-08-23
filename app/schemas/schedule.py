@@ -15,6 +15,7 @@ class ScheduleIn(BaseModel):
 
 
 class ScheduleOut(BaseModel):
+    id: int
     title: str
     s_type: ScheduleType
     hour: int
