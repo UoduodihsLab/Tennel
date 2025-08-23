@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from tortoise.contrib.fastapi import register_tortoise
 
@@ -23,6 +24,8 @@ app = FastAPI(
     version='0.0.1',
     debug=True,
 )
+
+app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
 
 
 @app.exception_handler(NotFoundRecordError)
