@@ -22,4 +22,4 @@ class AuthService:
 
         token_payload = {'sub': user.username, 'uid': user.id, 'role': user.role}
         token = create_access_token(token_payload)
-        return TokenResponse.model_validate({'token': token, 'token_type': 'Bearer'})
+        return TokenResponse.model_validate({'token': token, 'type': 'Bearer'})
