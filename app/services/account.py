@@ -10,10 +10,10 @@ from app.db.models.account import AccountModel
 from app.exceptions import AlreadyExistError, AlreadyAuthenticatedError, GetClientError, UpdateRecordError
 from app.exceptions import NotFoundRecordError, PermissionDeniedError
 from app.schemas.account import (AccountCreate,
-                                 AccountResponse,
+                                 AccountOut,
                                  AccountFilter,
-                                 StartLoginResponse,
-                                 AccountCompleteLogin, CompleteLoginResponse)
+                                 SendCodeOut,
+                                 AccountSignIn, AccountSignInOut)
 from app.schemas.common import PageResponse
 
 logger = logging.getLogger(__name__)
@@ -35,10 +35,10 @@ class AccountService:
 
         new_account = await self.crud.create(dict_to_create)
 
-        return AccountResponse.model_validate(new_account)
+        return AccountOut.model_validate(new_account)
 
     async def list(self, *, page: int, size: int, filters: AccountFilter, order_by: List[str] | None = None, ) -> \
-            PageResponse[AccountResponse]:
+            PageResponse[AccountOut]:
         offset = (page - 1) * size
         filters_dict = filters.model_dump(exclude_unset=True)
         total, rows = await self.crud.list(
@@ -48,9 +48,9 @@ class AccountService:
             order_by=order_by
         )
 
-        items = [AccountResponse.model_validate(row) for row in rows]
+        items = [AccountOut.model_validate(row) for row in rows]
 
-        return PageResponse[AccountResponse](total=total, items=items)
+        return PageResponse[AccountOut](total=total, items=items)
 
     async def get_user_account(self, user_id: int, account_id: int) -> AccountModel:
         account = await self.crud.get_with_user(account_id)
@@ -75,7 +75,7 @@ class AccountService:
         if await client.is_user_authorized():
             raise AlreadyAuthenticatedError(f'账号{account.user.username}已授登录, 请勿重复登录')
 
-    async def start_login(self, user_id: int, account_id: int) -> StartLoginResponse:
+    async def send_code(self, user_id: int, account_id: int) -> SendCodeOut:
         account = await self.get_user_account(user_id, account_id)
         client = self.get_account_client(account.phone)
         await client.connect()
@@ -83,17 +83,17 @@ class AccountService:
         try:
             await self.ensure_not_authenticated(client, account)
             sent_code_response = await client.send_code_request(account.phone)
-            return StartLoginResponse(phone_code_hash=sent_code_response.phone_code_hash)
+            return SendCodeOut(phone_code_hash=sent_code_response.phone_code_hash)
         finally:
             if client.is_connected():
                 await client.disconnect()
 
-    async def complete_login(
+    async def sign_in(
             self,
             user_id: int,
             account_id,
-            data_to_complete: AccountCompleteLogin
-    ) -> CompleteLoginResponse:
+            data_to_complete: AccountSignIn
+    ) -> AccountSignInOut:
         account = await self.get_user_account(user_id, account_id)
         client = self.get_account_client(account.phone)
         await client.connect()
@@ -122,4 +122,4 @@ class AccountService:
         updated_account = await self.crud.get(account.id)
         if updated_account is None:
             raise NotFoundRecordError(f'账号 {account.phone} 在认证过程中被删除')
-        return CompleteLoginResponse.model_validate(updated_account)
+        return AccountSignInOut.model_validate(updated_account)

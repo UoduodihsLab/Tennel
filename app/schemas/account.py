@@ -6,28 +6,30 @@ class AccountCreate(BaseModel):
     two_fa: str
 
 
-class AccountResponse(BaseModel):
+class AccountOut(BaseModel):
     id: int
     tid: int | None = Field(None)
     username: str | None = Field(None)
     phone: str
     session_name: str
+    is_authenticated: bool
+    online: bool
 
     model_config = {
         'from_attributes': True
     }
 
 
-class AccountCompleteLogin(BaseModel):
+class AccountSignIn(BaseModel):
     phone_code_hash: str
     code: str
 
 
-class StartLoginResponse(BaseModel):
+class SendCodeOut(BaseModel):
     phone_code_hash: str
 
 
-class CompleteLoginResponse(AccountResponse):
+class AccountSignInOut(AccountOut):
     pass
 
 
