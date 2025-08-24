@@ -4,9 +4,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.constants.enum import ScheduleType, ScheduleStatus
 from app.core.telegram_client import ClientManager
+from app.crud.channel import ChannelCRUD
 from app.crud.schedule import ScheduleCRUD
 from app.db.models.schedule import ScheduleModel
 from app.exceptions import UnsupportedSchedulerTypeError, NotFoundRecordError
+from app.schemas.channel import ChannelResponse
 from app.schemas.common import PageResponse
 from app.schemas.schedule import ScheduleIn, ScheduleOut, ScheduleFilter, PublishMessageArgs
 from app.task.schedules import create_daily_publish_message_scheduler
@@ -97,5 +99,14 @@ class ScheduleService:
         await self.crud.delete(schedule_record.id)
         return schedule_record.id
 
-    async def stop_all_schedules(self):
-        pass
+    async def get_available_channels(self, user_id: int) -> List[ChannelResponse]:
+        channels = await ChannelCRUD().filter_by_user_id(user_id)
+        schedules = await self.crud.filter_by_user_id(user_id)
+        included_ids = [cid for item in schedules for cid in item.args['channels_ids']]
+
+        available_channels = []
+        for channel in channels:
+            if channel.id in included_ids:
+                continue
+            available_channels.append(ChannelResponse.model_validate(channel))
+        return available_channels

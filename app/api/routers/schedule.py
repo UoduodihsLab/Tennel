@@ -9,6 +9,7 @@ from starlette.responses import JSONResponse
 from app.api.deps import auth_dependency, get_scheduler, get_client_manager
 from app.core.telegram_client import ClientManager
 from app.db.models.user import UserModel
+from app.schemas.channel import ChannelResponse
 from app.schemas.common import PageResponse, Pagination
 from app.schemas.schedule import ScheduleOut, ScheduleFilter, ScheduleIn
 from app.services.schedule import ScheduleService
@@ -124,6 +125,20 @@ async def read_schedules(
 ):
     try:
         return await service.list(pagination.page, pagination.size, filters, order_by)
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get(
+    '/available-channels/',
+    response_model=List[ChannelResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get available channels",
+)
+async def available_channels(request: Request):
+    try:
+        return await service.get_available_channels(request.state.user.id)
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

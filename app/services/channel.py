@@ -44,7 +44,7 @@ class ChannelService:
         )
 
     async def all_channels(self, user_id: int) -> List[ChannelResponse]:
-        rows = await self.crud.all(user_id=user_id)
+        rows = await self.crud.filter_by_user_id(user_id=user_id)
 
         items = [ChannelResponse.model_validate(row) for row in rows]
 

@@ -7,10 +7,10 @@ from app.constants.enum import ScheduleType, ScheduleStatus
 
 class ScheduleIn(BaseModel):
     title: str
-    s_type: ScheduleType
-    hour: int
-    minute: int
-    second: int
+    s_type: ScheduleType = Field(ScheduleType.PUBLISH_MESSAGE)
+    hour: int = Field(0)
+    minute: int = Field(0)
+    second: int = Field(0)
     args: Dict[str, Any] | None = Field(None)
 
 
