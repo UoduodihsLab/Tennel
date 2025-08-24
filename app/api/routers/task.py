@@ -56,7 +56,7 @@ async def read_tasks(
 
 
 @router.post(
-    '/{task_id}/start-task/',
+    '/{task_id}/start/',
     status_code=status.HTTP_200_OK,
     summary='Start a task'
 )
