@@ -52,6 +52,13 @@ class AccountService:
 
         return PageResponse[AccountOut](total=total, items=items)
 
+    async def all_accounts(self, user_id: int) -> List[AccountOut]:
+        rows = await self.crud.all(user_id=user_id)
+
+        items = [AccountOut.model_validate(row) for row in rows]
+
+        return items
+
     async def get_user_account(self, user_id: int, account_id: int) -> AccountModel:
         account = await self.crud.get_with_user(account_id)
 

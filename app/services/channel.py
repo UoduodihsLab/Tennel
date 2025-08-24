@@ -1,11 +1,11 @@
 from typing import List
 
+from app.constants.enum import AccountRole
+from app.crud.account import AccountCRUD
+from app.crud.account_channel import AccountChannelCRUD
 from app.crud.channel import ChannelCRUD
 from app.schemas.channel import ChannelFilter, ChannelResponse
 from app.schemas.common import PageResponse
-from app.crud.account import AccountCRUD
-from app.crud.account_channel import AccountChannelCRUD
-from app.constants.enum import AccountRole
 
 
 class ChannelService:
@@ -42,3 +42,10 @@ class ChannelService:
                 'access_hash': access_hash,
             }
         )
+
+    async def all_channels(self, user_id: int) -> List[ChannelResponse]:
+        rows = await self.crud.all(user_id=user_id)
+
+        items = [ChannelResponse.model_validate(row) for row in rows]
+
+        return items
