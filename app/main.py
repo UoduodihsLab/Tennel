@@ -10,8 +10,8 @@ from app.api.routers.channel import router as channel_router
 from app.api.routers.media import router as media_router
 from app.api.routers.schedule import router as schedule_router
 from app.api.routers.task import router as task_router
-from app.api.routers.users.admin import router as admin_router
-from app.api.routers.users.user import router as user_router
+from app.api.routers.admin import router as admin_router
+from app.api.routers.user import router as user_router
 from app.core.lifespan import lifespan
 from app.core.logging_config import setup_logging
 from app.db.tortoise_config import TORTOISE_ORM
