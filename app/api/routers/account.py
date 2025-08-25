@@ -58,21 +58,6 @@ async def read_accounts(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.get(
-    '/all/',
-    response_model=List[AccountOut],
-    status_code=status.HTTP_200_OK,
-    summary="List all accounts"
-)
-async def read_all_accounts(request: Request):
-    try:
-        current_user: UserModel = request.state.user
-        return await service.all_accounts(current_user.id)
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
 @router.post(
     '/{account_id}/send-code/',
     response_model=SendCodeOut,

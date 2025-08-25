@@ -9,7 +9,7 @@ class ChannelModel(BaseModel):
     title = fields.CharField(max_length=255, null=True)
     username = fields.CharField(unique=True, max_length=64, null=True)
     link = fields.CharField(unique=True, max_length=255, null=True)
-    photo_name = fields.TextField(null=True)
+    photo = fields.TextField(null=True)
     description = fields.TextField(null=True)
 
     lang = fields.CharField(max_length=16, null=True)

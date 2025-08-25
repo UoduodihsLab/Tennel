@@ -119,7 +119,7 @@ class TaskService:
 
         raise UnsupportedTaskTypeError('不支持的任务类型')
 
-    async def start_batch_create_channel(self, user_id: int, task_schema: TaskResponse, client_manager: ClientManager):
+    async def start_batch_create_channel(self, task_schema: TaskResponse, client_manager: ClientManager):
         args = task_schema.args
         total = task_schema.total
         titles = args['titles']
@@ -141,7 +141,7 @@ class TaskService:
             else:
                 title = random.choice(titles_copy)
 
-            task_data = (user_id, task_schema.id, client_manager, session_name, title)
+            task_data = (task_schema.id, client_manager, session_name, title)
             queue_manager.create_channel_queue.put_nowait(task_data)
 
     async def start_batch_set_channel_username(
@@ -291,7 +291,7 @@ class TaskService:
 
     @staticmethod
     async def get_available_accounts(user_id: int) -> List[AccountOut]:
-        rows = await AccountCRUD().get_available_accounts(user_id)
+        rows = await AccountCRUD().list_online_by_user_id(user_id)
 
         available_accounts = [
             row for row in rows

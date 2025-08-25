@@ -13,14 +13,17 @@ class AccountCRUD(BaseCRUD[AccountModel]):
     async def get_by_phone(self, phone: str) -> AccountModel | None:
         return await self.model.filter(phone=phone).first()
 
-    async def get_by_session_name(self, session_name: str) -> AccountModel | None:
-        return await self.model.filter(session_name=session_name).first()
-
-    async def get_with_user(self, account_id: int) -> AccountModel | None:
+    async def get_related_user(self, account_id: int) -> AccountModel | None:
         return await self.model.filter(id=account_id).select_related('user').first()
 
-    async def get_all_accounts_session(self) -> List[str]:
-        return await self.model.all().values_list('session_name', flat=True)
+    async def list_authenticated_only_session_name(self) -> List[str]:
+        return await self.model.filter(is_authenticated=True).values_list('session_name', flat=True)
 
-    async def get_available_accounts(self, user_id: int) -> List[AccountModel]:
-        return await self.model.filter(user_id=user_id, is_authenticated=True)
+    async def list_online_by_user_id(self, user_id: int) -> List[AccountModel]:
+        return await self.model.filter(user_id=user_id, online=True)
+
+    async def list_online(self) -> List[AccountModel]:
+        return await self.model.filter(online=True).select_related('user')
+
+    async def list_authenticated(self) -> List[AccountModel]:
+        return await self.model.filter(is_authenticated=True)

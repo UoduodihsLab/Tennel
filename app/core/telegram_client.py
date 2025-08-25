@@ -65,6 +65,10 @@ class ClientManager:
         tasks = [self.connect_client(session) for session in self.sessions]
         await asyncio.gather(*tasks)
 
+    async def is_online(self, session_name: str) -> bool:
+        async with self._manager_lock:
+            return session_name in self.clients
+
     @asynccontextmanager
     async def get_client(self, session_name: str):
         async with self._manager_lock:
@@ -119,7 +123,7 @@ async def setup_client_manager() -> ClientManager:
     enable_proxy = settings.ENABLE_PROXY
     proxy = settings.PROXY
     sessions_root = settings.TELEGRAM_SESSIONS_ROOT
-    sessions_name = await AccountCRUD().get_all_accounts_session()
+    sessions_name = await AccountCRUD().list_authenticated_only_session_name()
 
     client_manager = ClientManager(
         api_id=api_id,
@@ -205,5 +209,13 @@ async def send_file_to_channel(client: TelegramClient, tid: int, media_list: Lis
     await client.send_file(tid, file=media_list, caption=caption)
 
 
-async def sync_channels_to_db(session_name: str):
-    pass
+async def fetch_latest_channels(client: TelegramClient) -> List[types.Channel]:
+    dialogs = await client.get_dialogs()
+
+    channels = []
+    for dialog in dialogs:
+        entity = dialog.entity
+        if isinstance(entity, types.Channel) and entity.broadcast and entity.admin_rights:
+            channels.append(entity)
+
+    return channels

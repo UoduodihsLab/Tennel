@@ -1,3 +1,4 @@
+import base64
 import random
 from datetime import datetime, timedelta, timezone
 from typing import List
@@ -85,6 +86,10 @@ async def generate_channel_message_to_publish(ai_prompt: str, lang: str, max_wor
 
 def tid_to_chat_id(tid: int) -> int:
     return int(f'-100{tid}')
+
+
+def photo_to_base64(photo: bytes) -> str:
+    return base64.b64encode(photo).decode()
 
 # if __name__ == '__main__':
 #     times = generate_random_times(datetime(2025, 8, 23, 0, 0, 0), 10)

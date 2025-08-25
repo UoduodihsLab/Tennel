@@ -1,15 +1,15 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
-import asyncio
 
 from fastapi import FastAPI
 
+from app.core.scheduler import setup_scheduler
 from app.db.register import connect_to_db, close_db_connection
-from .telegram_client import setup_client_manager
 from app.task.workers import create_channel_worker, set_channel_username_worker, set_channel_photo_worker, \
     set_channel_description_worker
-
-from app.core.scheduler import setup_scheduler
+from .system_schedules import add_system_schedules
+from .telegram_client import setup_client_manager
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(set_channel_photo_worker())
     asyncio.create_task(set_channel_description_worker())
 
+    await add_system_schedules(app.state.scheduler, app.state.client_manager)
 
     logger.info('Tennel已启动')
 
