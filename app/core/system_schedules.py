@@ -81,7 +81,7 @@ async def add_sync_accounts_online_status_schedule(scheduler: AsyncIOScheduler, 
         func=sync_accounts_online_status,
         trigger='interval',
         args=[client_manager],
-        seconds=2,
+        seconds=5,
         id=job_id
     )
 
