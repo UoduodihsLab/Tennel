@@ -58,7 +58,7 @@ class TaskService:
         if account is None:
             raise NotFoundRecordError(f'未查询到此账号: {account_id}')
 
-        created_count = await AccountChannelCRUD().count_channels_by_account_id(account.id)
+        created_count = await AccountChannelCRUD().count_created_channels(account.id)
         remaining_count = settings.MAX_CHANNELS_COUNT_PER_ACCOUNT - created_count
 
         if total > remaining_count:
@@ -146,7 +146,6 @@ class TaskService:
 
     async def start_batch_set_channel_username(
             self,
-            user_id: int,
             task_schema: TaskResponse,
             client_manager: ClientManager
     ):
@@ -175,7 +174,6 @@ class TaskService:
 
     async def start_batch_set_channel_photo(
             self,
-            user_id: int,
             task_schema: TaskResponse,
             client_manager: ClientManager
     ):
@@ -206,7 +204,6 @@ class TaskService:
 
     async def start_batch_set_channel_description(
             self,
-            user_id: int,
             task_schema: TaskResponse,
             client_manager: ClientManager
     ):
@@ -245,16 +242,16 @@ class TaskService:
         task_schema = TaskResponse.model_validate(task)
         task_type = task_schema.t_type
         if task_type == TaskType.CREATE_CHANNEL:
-            return await self.start_batch_create_channel(user_id, task_schema, client_manager)
+            return await self.start_batch_create_channel(task_schema, client_manager)
 
         if task_type == TaskType.SET_USERNAME:
-            return await self.start_batch_set_channel_username(user_id, task_schema, client_manager)
+            return await self.start_batch_set_channel_username(task_schema, client_manager)
 
         if task_type == TaskType.SET_PHOTO:
-            return await self.start_batch_set_channel_photo(user_id, task_schema, client_manager)
+            return await self.start_batch_set_channel_photo(task_schema, client_manager)
 
         if task_type == TaskType.SET_DESCRIPTION:
-            return await self.start_batch_set_channel_description(user_id, task_schema, client_manager)
+            return await self.start_batch_set_channel_description(task_schema, client_manager)
 
         raise UnsupportedTaskTypeError('不支持的任务类型')
 
@@ -295,6 +292,6 @@ class TaskService:
 
         available_accounts = [
             row for row in rows
-            if await AccountChannelCRUD().count_channels_by_account_id(row.id) < settings.MAX_CHANNELS_COUNT_PER_ACCOUNT
+            if await AccountChannelCRUD().count_created_channels(row.id) < settings.MAX_CHANNELS_COUNT_PER_ACCOUNT
         ]
         return [AccountOut.model_validate(item) for item in available_accounts]

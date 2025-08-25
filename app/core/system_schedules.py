@@ -30,12 +30,22 @@ async def sync_channels_to_db(channels: List[types.Channel], user_id: int, clien
 
         async with in_transaction():
             created, updated = await ChannelCRUD().create_or_update_by_tid(channel.id, data)
-            if created:
+
+            # 如果当前账号是管理员但未同步到数据库, 则同步
+            current_channel = await ChannelCRUD().get_by_tid(channel.id)
+            created_c2a = await AccountChannelCRUD().get_by_channel_id_and_account_id(current_channel.id, account_id)
+
+            if created_c2a:
+                await AccountChannelCRUD().update(
+                    created_c2a.id,
+                    {'role': AccountRole.OWNER if channel.creator else AccountRole.ADMIN}
+                )
+            if created or created_c2a is None:
                 c2a_data = {
                     'account_id': account_id,
-                    'channel_id': created.id,
+                    'channel_id': current_channel.id,
                     'access_hash': channel.access_hash,
-                    'role': AccountRole.ADMIN,
+                    'role': AccountRole.OWNER if channel.creator else AccountRole.ADMIN,
                 }
                 await AccountChannelCRUD().create(c2a_data)
 
@@ -58,7 +68,7 @@ async def add_sync_channels_schedule(scheduler: AsyncIOScheduler, client_manager
         func=process_sync_channels,
         trigger='interval',
         args=[client_manager],
-        minutes=1,
+        minutes=2,
         id=job_id,
     )
 
@@ -81,7 +91,7 @@ async def add_sync_accounts_online_status_schedule(scheduler: AsyncIOScheduler, 
         func=sync_accounts_online_status,
         trigger='interval',
         args=[client_manager],
-        seconds=5,
+        minutes=10,
         id=job_id
     )
 

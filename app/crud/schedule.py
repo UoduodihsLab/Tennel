@@ -13,3 +13,6 @@ class ScheduleCRUD(BaseCRUD[ScheduleModel]):
 
     async def filter_by_user_id(self, user_id: int) -> List[ScheduleModel]:
         return await self.model.filter(user_id=user_id)
+
+    async def all(self) -> List[ScheduleModel]:
+        return await self.model.all()

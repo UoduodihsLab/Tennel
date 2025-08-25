@@ -3,12 +3,12 @@ from typing import List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app.constants.enum import ScheduleType, ScheduleStatus
+from app.constants.enum import ScheduleStatus
 from app.core.telegram_client import ClientManager
 from app.crud.channel import ChannelCRUD
 from app.crud.schedule import ScheduleCRUD
 from app.db.models.schedule import ScheduleModel
-from app.exceptions import UnsupportedSchedulerTypeError, NotFoundRecordError
+from app.exceptions import NotFoundRecordError
 from app.schemas.channel import ChannelResponse
 from app.schemas.common import PageResponse
 from app.schemas.schedule import ScheduleIn, ScheduleOut, ScheduleFilter, PublishMessageArgs
@@ -34,22 +34,16 @@ class ScheduleService:
         items = [ScheduleOut.model_validate(row) for row in rows]
         return PageResponse[ScheduleOut](total=total, items=items)
 
-    async def create_publish_message_schedule(self, user_id: int, data: ScheduleIn) -> ScheduleOut:
+    async def create_schedule(self, user_id: int, data: ScheduleIn):
         PublishMessageArgs.model_validate(data.args)
 
         # TODO: 检查包含的频道是否已被其他定时任务绑定, 以及频道是否属于当前用户
 
         dict_to_create = ScheduleIn.model_dump(data)
         dict_to_create.update({'user_id': user_id})
-
         new_scheduler = await self.crud.create(dict_to_create)
+
         return ScheduleOut.model_validate(new_scheduler)
-
-    async def create_schedule(self, user_id: int, data: ScheduleIn):
-        if data.s_type == ScheduleType.PUBLISH_MESSAGE:
-            return await self.create_publish_message_schedule(user_id, data)
-
-        raise UnsupportedSchedulerTypeError('不支持的定时任务类型')
 
     async def start_schedule(
             self,

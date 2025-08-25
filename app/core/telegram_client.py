@@ -8,7 +8,6 @@ from typing import List, Dict, Tuple
 from telethon import TelegramClient, types, functions
 
 from app.core.config import settings
-from app.crud.account import AccountCRUD
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +21,14 @@ class ClientManager:
             enable_proxy: bool,
             proxy: Tuple[str, str, int, str, str],
             sessions_root: str,
-            sessions: List[str],
+            # sessions: List[str],
     ):
         self.api_id = api_id
         self.api_hash = api_hash
         self.enable_proxy = enable_proxy
         self.proxy = proxy
         self.sessions_root = sessions_root
-        self.sessions = sessions
+        # self.sessions = sessions
 
         self.clients: Dict[str, TelegramClient] = {}
         self.locks: Dict[str, asyncio.Lock] = {}
@@ -61,9 +60,9 @@ class ClientManager:
             logger.error(f'连接 {session_name} 时发生错误: {e}')
             return False
 
-    async def connect_all(self):
-        tasks = [self.connect_client(session) for session in self.sessions]
-        await asyncio.gather(*tasks)
+    # async def connect_all(self):
+    #     tasks = [self.connect_client(session) for session in self.sessions]
+    #     await asyncio.gather(*tasks)
 
     async def is_online(self, session_name: str) -> bool:
         async with self._manager_lock:
@@ -123,7 +122,7 @@ async def setup_client_manager() -> ClientManager:
     enable_proxy = settings.ENABLE_PROXY
     proxy = settings.PROXY
     sessions_root = settings.TELEGRAM_SESSIONS_ROOT
-    sessions_name = await AccountCRUD().list_authenticated_only_session_name()
+    # sessions_name = await AccountCRUD().list_authenticated_only_session_name()
 
     client_manager = ClientManager(
         api_id=api_id,
@@ -131,10 +130,10 @@ async def setup_client_manager() -> ClientManager:
         enable_proxy=enable_proxy,
         proxy=proxy,
         sessions_root=sessions_root,
-        sessions=sessions_name,
+        # sessions=sessions_name,
     )
 
-    await client_manager.connect_all()
+    # await client_manager.connect_all()
 
     return client_manager
 

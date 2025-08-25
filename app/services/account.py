@@ -133,14 +133,14 @@ class AccountService:
 
         online = await client_manager.is_online(account.session_name)
 
-        if online:
-            return
+        if not online:
+            is_launched = await client_manager.connect_client(account.session_name)
+            if not is_launched:
+                raise LaunchAccountError('上线失败')
 
-        is_launched = await client_manager.connect_client(account.session_name)
-
-        if not is_launched:
-            raise LaunchAccountError('上线失败')
+        await self.crud.update(account.id, {'online': True})
 
     async def unlaunch(self, user_id: int, account_id: int, client_manager: ClientManager):
         account = await self.get_user_account(user_id, account_id)
         await client_manager.remove_client(account.session_name)
+        await self.crud.update(account.id, {'online': False})
