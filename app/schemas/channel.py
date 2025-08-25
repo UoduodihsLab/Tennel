@@ -8,6 +8,7 @@ class ChannelResponse(BaseModel):
     tid: int | None = Field(None)
     title: str | None = Field(None)
     username: str | None = Field(None)
+    link: str | None = Field(None)
     photo: str | None = Field(None)
     description: str | None = Field(None)
     lang: str | None = Field(None)

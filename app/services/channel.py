@@ -18,3 +18,11 @@ class ChannelService:
         items = [ChannelResponse.model_validate(row) for row in rows]
 
         return PageResponse[ChannelResponse](total=total, items=items)
+
+    async def generate_link(self, user_id: int):
+        channels = await self.crud.filter_by_user_id(user_id)
+
+        for channel in channels:
+            if channel.username:
+                link = f'https://t.me/{channel.username}'
+                await self.crud.update(channel.id, {'link': link})
