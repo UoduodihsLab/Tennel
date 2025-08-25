@@ -53,3 +53,11 @@ class MediaTooLargeError(Exception):
 
 class UnsupportedSchedulerTypeError(Exception):
     pass
+
+
+class UnAuthenticatedError(Exception):
+    pass
+
+
+class LaunchAccountError(Exception):
+    pass

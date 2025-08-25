@@ -4,10 +4,11 @@ from typing import List
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 
-from app.core.telegram_client import get_static_client_for_phone
+from app.core.telegram_client import get_static_client_for_phone, ClientManager
 from app.crud.account import AccountCRUD
 from app.db.models.account import AccountModel
-from app.exceptions import AlreadyExistError, AlreadyAuthenticatedError, GetClientError, UpdateRecordError
+from app.exceptions import AlreadyExistError, AlreadyAuthenticatedError, GetClientError, UpdateRecordError, \
+    UnAuthenticatedError, LaunchAccountError
 from app.exceptions import NotFoundRecordError, PermissionDeniedError
 from app.schemas.account import (AccountCreate,
                                  AccountOut,
@@ -123,3 +124,23 @@ class AccountService:
         if updated_account is None:
             raise NotFoundRecordError(f'账号 {account.phone} 在认证过程中被删除')
         return AccountSignInOut.model_validate(updated_account)
+
+    async def launch(self, user_id: int, account_id: int, client_manager: ClientManager):
+        account = await self.get_user_account(user_id, account_id)
+
+        if not account.is_authenticated:
+            raise UnAuthenticatedError('此账号未登录, 请登录后再试')
+
+        online = await client_manager.is_online(account.session_name)
+
+        if online:
+            return
+
+        is_launched = await client_manager.connect_client(account.session_name)
+
+        if not is_launched:
+            raise LaunchAccountError('上线失败')
+
+    async def unlaunch(self, user_id: int, account_id: int, client_manager: ClientManager):
+        account = await self.get_user_account(user_id, account_id)
+        await client_manager.remove_client(account.session_name)

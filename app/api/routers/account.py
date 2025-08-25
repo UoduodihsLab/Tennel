@@ -2,8 +2,10 @@ import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, status, Query, Request, HTTPException
+from starlette.responses import JSONResponse
 
-from app.api.deps import auth_dependency
+from app.api.deps import auth_dependency, get_client_manager
+from app.core.telegram_client import ClientManager
 from app.db.models import UserModel
 from app.exceptions import AlreadyAuthenticatedError, GetClientError, UpdateRecordError, PermissionDeniedError
 from app.schemas.account import AccountCreate, AccountOut, AccountFilter, SendCodeOut, \
@@ -99,3 +101,33 @@ async def sign_in(request: Request, account_id: int, data: AccountSignIn):
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.put(
+    '/{account_id}/launch/',
+    status_code=status.HTTP_200_OK,
+    summary="Launch account"
+)
+async def launch(request: Request, account_id: int, client_manager: ClientManager = Depends(get_client_manager)):
+    current_user: UserModel = request.state.user
+    try:
+        await service.launch(current_user.id, account_id, client_manager)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'msg': 'ok'})
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+
+
+@router.put(
+    '/{account_id}/unlaunch/',
+    status_code=status.HTTP_200_OK,
+    summary="Unlaunch account"
+)
+async def unlaunch(request: Request, account_id: int, client_manager: ClientManager = Depends(get_client_manager)):
+    current_user: UserModel = request.state.user
+    try:
+        await service.unlaunch(current_user.id, account_id, client_manager)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'msg': 'ok'})
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
