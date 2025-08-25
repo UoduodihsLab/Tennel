@@ -22,5 +22,5 @@ class AccountCRUD(BaseCRUD[AccountModel]):
     async def get_all_accounts_session(self) -> List[str]:
         return await self.model.all().values_list('session_name', flat=True)
 
-    async def all(self, user_id: int) -> List[AccountModel]:
+    async def get_available_accounts(self, user_id: int) -> List[AccountModel]:
         return await self.model.filter(user_id=user_id, is_authenticated=True)

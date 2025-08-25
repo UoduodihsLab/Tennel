@@ -2,7 +2,6 @@ import logging
 import traceback
 from typing import List
 
-from certifi.core import exit_cacert_ctx
 from fastapi import APIRouter, Depends, status, Request, HTTPException, Query
 from starlette.responses import JSONResponse
 
@@ -11,6 +10,8 @@ from app.api.deps import get_client_manager
 from app.core.telegram_client import ClientManager
 from app.db.models import UserModel
 from app.exceptions import UnsupportedTaskTypeError
+from app.schemas.account import AccountOut
+from app.schemas.channel import ChannelResponse
 from app.schemas.common import PageResponse, Pagination
 from app.schemas.task import TaskResponse, TaskFilter, TaskCreate
 from app.services.task import TaskService
@@ -83,4 +84,34 @@ async def delete_task(request: Request, task_id: int):
         await service.delete_task(task_id, current_user.id)
         return JSONResponse(status_code=status.HTTP_200_OK, content='任务删除成功')
     except Exception as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+
+
+@router.get(
+    '/available-accounts/',
+    response_model=List[AccountOut],
+    status_code=status.HTTP_200_OK,
+    summary='Get available accounts'
+)
+async def get_available_accounts(request: Request):
+    try:
+        current_user: UserModel = request.state.user
+        return await service.get_available_accounts(current_user.id)
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+
+
+@router.get(
+    '/available-channels/',
+    response_model=List[ChannelResponse],
+    status_code=status.HTTP_200_OK,
+    summary='Get available channels'
+)
+async def get_available_channels(request: Request):
+    try:
+        current_user: UserModel = request.state.user
+        return await service.get_available_channels(current_user.id)
+    except Exception as e:
+        logger.error(e)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))

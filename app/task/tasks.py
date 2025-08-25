@@ -1,4 +1,5 @@
 import logging
+from tortoise.transactions import in_transaction
 
 from app.constants.enum import AccountRole
 from app.core.telegram_client import ClientManager, create_channel, set_channel_username, set_channel_photo, \
@@ -20,16 +21,16 @@ async def process_create_channel(
         async with client_manager.get_client(session_name) as client:
             new_channel = await create_channel(client, title)
             log = f'任务 {task_id} 创建频道成功: {new_channel.id} - {new_channel.title}'
-            await TaskService().update_task_status_with_increment_success_and_log(task_id, log)
-            await ChannelService().create_channel_with_account(
-                user_id,
-                new_channel.id,
-                new_channel.title,
-                new_channel.access_hash,
-                AccountRole.OWNER,
-                session_name,
-            )
-
+            async with in_transaction():
+                await TaskService().update_task_status_with_increment_success_and_log(task_id, log)
+                await ChannelService().create_channel_with_account(
+                    user_id,
+                    new_channel.id,
+                    new_channel.title,
+                    new_channel.access_hash,
+                    AccountRole.OWNER,
+                    session_name,
+                )
             logger.info(log)
     except Exception as e:
         logger.error(f'任务 {task_id} 创建频道失败: {e}')

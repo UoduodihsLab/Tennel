@@ -6,7 +6,7 @@ from app.db.base import BaseModel
 
 class ChannelModel(BaseModel):
     tid = fields.BigIntField(unique=True, null=True)
-    title = fields.CharField(unique=True, max_length=255, null=True)
+    title = fields.CharField(max_length=255, null=True)
     username = fields.CharField(unique=True, max_length=64, null=True)
     link = fields.CharField(unique=True, max_length=255, null=True)
     photo_name = fields.TextField(null=True)

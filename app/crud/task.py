@@ -2,6 +2,7 @@ from app.db.models.task import TaskModel
 from .base import BaseCRUD
 from tortoise.expressions import F
 from tortoise.functions import Concat
+from typing import List
 
 
 class TaskCRUD(BaseCRUD):
@@ -19,3 +20,6 @@ class TaskCRUD(BaseCRUD):
 
     async def append_log(self, task_id: int, log: str):
         return await self.model.filter(id=task_id).update(logs=Concat(F('logs'), '\n', log))
+
+    async def filter_by_user_id(self, user_id: int) -> List[TaskModel]:
+        return await self.model.filter(user_id=user_id)

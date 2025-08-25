@@ -8,11 +8,14 @@ from app.core.config import settings
 from app.core.telegram_client import ClientManager
 from app.crud.account import AccountCRUD
 from app.crud.account_channel import AccountChannelCRUD
+from app.crud.channel import ChannelCRUD
 from app.crud.task import TaskCRUD
 from app.db.models import AccountChannelModel
 from app.db.models.task import TaskModel
 from app.exceptions import NotFoundRecordError, MuchTooManyChannelsError, UnsupportedTaskTypeError, \
     DeleteRunningTaskError, DuplicateRunningTaskError
+from app.schemas.account import AccountOut
+from app.schemas.channel import ChannelResponse
 from app.schemas.common import PageResponse
 from app.schemas.task import TaskFilter, TaskResponse, TaskCreate, BatchCreateChannelArgs, BatchSetChannelUsernameArgs, \
     BatchSetChannelPhotoArgs, BatchSetChannelDescriptionArgs
@@ -55,7 +58,7 @@ class TaskService:
         if account is None:
             raise NotFoundRecordError(f'未查询到此账号: {account_id}')
 
-        created_count = await AccountChannelCRUD().count_channels_by_account(account.id)
+        created_count = await AccountChannelCRUD().count_channels_by_account_id(account.id)
         remaining_count = settings.MAX_CHANNELS_COUNT_PER_ACCOUNT - created_count
 
         if total > remaining_count:
@@ -280,3 +283,18 @@ class TaskService:
         task: TaskModel | None = await self.crud.get(task_id)
         if task.success + task.failure == task.total:
             await self.crud.update(task_id, {'status': TaskStatus.COMPLETED})
+
+    @staticmethod
+    async def get_available_channels(user_id: int) -> List[ChannelResponse]:
+        rows = await ChannelCRUD().filter_by_user_id(user_id)
+        return [ChannelResponse.model_validate(row) for row in rows]
+
+    @staticmethod
+    async def get_available_accounts(user_id: int) -> List[AccountOut]:
+        rows = await AccountCRUD().get_available_accounts(user_id)
+
+        available_accounts = [
+            row for row in rows
+            if await AccountChannelCRUD().count_channels_by_account_id(row.id) < settings.MAX_CHANNELS_COUNT_PER_ACCOUNT
+        ]
+        return [AccountOut.model_validate(item) for item in available_accounts]
