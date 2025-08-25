@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -12,6 +13,8 @@ from app.schemas.channel import ChannelResponse
 from app.schemas.common import PageResponse
 from app.schemas.schedule import ScheduleIn, ScheduleOut, ScheduleFilter, PublishMessageArgs
 from app.task.schedules import create_daily_publish_message_scheduler
+
+logger = logging.getLogger(__name__)
 
 
 class ScheduleService:
@@ -50,17 +53,23 @@ class ScheduleService:
 
     async def start_schedule(
             self,
-            schedule_id: int,
             user_id: int,
+            schedule_id: int,
             scheduler: AsyncIOScheduler,
             client_manager: ClientManager
     ) -> int:
+        logger.info(f'current_user_id: {user_id}')
         schedule_record: ScheduleModel | None = await self.crud.get_join_user_id(schedule_id, user_id)
 
         if schedule_record is None:
             raise NotFoundRecordError(f'查无此定时任务 {schedule_id}')
 
-        if schedule_record.s_type == ScheduleType.PUBLISH_MESSAGE:
+        job_id = f'{schedule_record.id}'
+        job = scheduler.get_job(job_id)
+
+        if job is not None:
+            scheduler.resume_job(job_id)
+        else:
             scheduler.add_job(
                 func=create_daily_publish_message_scheduler,
                 trigger='cron',
@@ -75,22 +84,22 @@ class ScheduleService:
                 },
                 id=f'{schedule_record.id}'
             )
-            await self.crud.update(schedule_record.id, {'status': ScheduleStatus.RUNNING})
+        await self.crud.update(schedule_record.id, {'status': ScheduleStatus.RUNNING})
+        return schedule_record.id
 
-            return schedule_record.id
-
-        raise UnsupportedSchedulerTypeError('不支持的定时任务类型')
-
-    async def stop_schedule(self, schedule_id: int, user_id: int, scheduler: AsyncIOScheduler) -> int:
+    async def stop_schedule(self, user_id: int, schedule_id: int, scheduler: AsyncIOScheduler) -> int:
         schedule_record: ScheduleModel | None = await self.crud.get_join_user_id(schedule_id, user_id)
         if schedule_record is None:
             raise NotFoundRecordError(f'查无此定时任务 {schedule_id}')
 
-        scheduler.pause_job(f'{schedule_record.id}')
+        job_id = f'{schedule_record.id}'
+        job = scheduler.get_job(job_id)
+        if job is not None:
+            scheduler.pause_job(f'{schedule_record.id}')
         await self.crud.update(schedule_record.id, {'status': ScheduleStatus.PENDING})
         return schedule_record.id
 
-    async def delete_schedule(self, schedule_id: int, user_id: int, scheduler: AsyncIOScheduler) -> bool:
+    async def delete_schedule(self, user_id: int, schedule_id: int, scheduler: AsyncIOScheduler) -> bool:
         schedule_record: ScheduleModel | None = await self.crud.get_join_user_id(schedule_id, user_id)
         if schedule_record is None:
             raise NotFoundRecordError(f'查无此任务 {schedule_id}')
