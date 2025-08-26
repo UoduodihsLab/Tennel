@@ -1,8 +1,11 @@
+import logging
 from typing import List
 
 from app.crud.channel import ChannelCRUD
-from app.schemas.channel import ChannelFilter, ChannelResponse
+from app.schemas.channel import ChannelFilter, ChannelResponse, SetLang, SetPrimaryLink
 from app.schemas.common import PageResponse
+
+logger = logging.getLogger(__name__)
 
 
 class ChannelService:
@@ -26,3 +29,17 @@ class ChannelService:
             if channel.username:
                 link = f'https://t.me/{channel.username}'
                 await self.crud.update(channel.id, {'link': link})
+
+    async def set_lang(self, user_id: int, data: SetLang):
+        for cid in data.channels_ids:
+            channel = await self.crud.get_by_user_id(user_id, cid)
+            if channel:
+                await self.crud.update(channel.id, {'lang': data.lang})
+
+    async def set_primary_link(self, user_id: int, data: SetPrimaryLink):
+        logger.info(f'user_id: {user_id}')
+        for cid in data.channels_ids:
+            channel = await self.crud.get_by_user_id(user_id, cid)
+            logger.info(channel)
+            if channel:
+                await self.crud.update(channel.id, {'primary_link': data.primary_link})

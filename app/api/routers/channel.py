@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status, Query, Request, HTTPException
 from starlette.responses import JSONResponse
 
 from app.api.deps import auth_dependency
-from app.schemas.channel import ChannelFilter
+from app.schemas.channel import ChannelFilter, SetLang, SetPrimaryLink
 from app.schemas.common import PageResponse, Pagination
 from app.services.channel import ChannelService
 
@@ -50,6 +50,36 @@ async def generate_link(request: Request):
         user_id = request.state.user.id
         await service.generate_link(user_id)
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={'msg': 'ok'})
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post(
+    '/set-lang/',
+    status_code=status.HTTP_200_OK,
+    summary="Set language"
+)
+async def set_lang(request: Request, data: SetLang):
+    try:
+        user_id = request.state.user.id
+        await service.set_lang(user_id, data)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'msg': 'ok'})
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post(
+    '/set-primary-link/',
+    status_code=status.HTTP_200_OK,
+    summary="Set primary link"
+)
+async def set_primary_link(request: Request, data: SetPrimaryLink):
+    try:
+        user_id = request.state.user.id
+        await service.set_primary_link(user_id, data)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={'msg': 'ok'})
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

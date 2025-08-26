@@ -26,3 +26,6 @@ class ChannelCRUD(BaseCRUD[ChannelModel]):
             created = await self.create(data)
 
         return created, updated
+
+    async def get_by_user_id(self, user_id: int, channel_id: int, ) -> ChannelModel | None:
+        return await self.model.filter(id=channel_id, user_id=user_id).first()

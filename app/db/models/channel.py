@@ -13,7 +13,7 @@ class ChannelModel(BaseModel):
     description = fields.TextField(null=True)
 
     lang = fields.CharField(max_length=16, null=True)
-    primary_links = fields.JSONField(null=True)
+    primary_link = fields.TextField(null=True)
 
     is_banned = fields.BooleanField(default=False)
 
