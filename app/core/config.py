@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     TELEGRAM_API_ID: int
     TELEGRAM_API_HASH: str
 
-    ENABLE_PROXY: bool = True
-    PROXY: Tuple[str, str, int, str, str] = ('socks5', '127.0.0.1', 7897, '', '')
+    ENABLE_PROXY: bool
+    PROXY: Tuple[str, str, int, str, str]
 
     TOKEN_SECRET_KEY: str
     TOKEN_ALGORITHM: str
@@ -40,8 +40,8 @@ class Settings(BaseSettings):
 
     TASK_INTERVAL_TIME: int = 5
 
-    AI_API_KEY: str = 'sk-202fd5e42b7b4e7dbe1592218dbe3a72',
-    AI_API_URL: str = 'https://api.deepseek.com/chat/completions',
+    AI_API_KEY: str
+    AI_API_URL: str
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',
