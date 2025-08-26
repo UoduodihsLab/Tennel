@@ -6,3 +6,5 @@ migrations/
 pyproject.toml
 sessions/
 media/
+gunicorn_conf.py
+uwsgi.ini
