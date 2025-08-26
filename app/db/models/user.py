@@ -8,6 +8,6 @@ from app.constants.enum import UserRole
 class UserModel(BaseModel):
     username = fields.CharField(unique=True, max_length=255)
     hashed_password = fields.CharField(max_length=128)
-    role = fields.IntEnumField(UserRole, null=True)
+    role = fields.IntEnumField(UserRole, default=UserRole.USER)
     class Meta:
         table = "users"
