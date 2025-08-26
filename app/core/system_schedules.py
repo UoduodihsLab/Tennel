@@ -68,7 +68,7 @@ async def add_sync_channels_schedule(scheduler: AsyncIOScheduler, client_manager
         func=process_sync_channels,
         trigger='interval',
         args=[client_manager],
-        minutes=2,
+        minutes=10,
         id=job_id,
     )
 
@@ -91,7 +91,7 @@ async def add_sync_accounts_online_status_schedule(scheduler: AsyncIOScheduler, 
         func=sync_accounts_online_status,
         trigger='interval',
         args=[client_manager],
-        minutes=10,
+        minutes=60,
         id=job_id
     )
 
