@@ -146,17 +146,9 @@ class MediaService:
 
         raise UnsupportedMediaTypeError('不支持的媒体类型')
 
-    async def get_random_avatar(self):
-        paths_list = await self.crud.get_medias_by_m_type(MediaType.AVATAR)
+    async def get_random_avatar_by_user_id(self, user_id: int):
+        paths_list = await self.crud.get_medias_by_user_id_and_m_type(user_id, MediaType.AVATAR)
 
-        return random.choice(paths_list)
-
-    async def get_random_img(self):
-        paths_list = await self.crud.get_medias_by_m_type(MediaType.IMAGE)
-        return random.choice(paths_list)
-
-    async def get_random_video(self):
-        paths_list = await self.crud.get_medias_by_m_type(MediaType.VIDEO)
         return random.choice(paths_list)
 
     async def get_random_img_by_user_id(self, user_id: int) -> str:

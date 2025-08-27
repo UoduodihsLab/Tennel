@@ -174,6 +174,7 @@ class TaskService:
 
     async def start_batch_set_channel_photo(
             self,
+            user_id: int,
             task_schema: TaskResponse,
             client_manager: ClientManager
     ):
@@ -190,7 +191,7 @@ class TaskService:
         await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
 
         for c2a in c2a_list:
-            photo_filename = await MediaService().get_random_avatar()
+            photo_filename = await MediaService().get_random_avatar_by_user_id(user_id)
             photo_path = str(settings.MEDIA_ROOT / photo_filename)
             task_data = (
                 task_schema.id,
@@ -248,7 +249,7 @@ class TaskService:
             return await self.start_batch_set_channel_username(task_schema, client_manager)
 
         if task_type == TaskType.SET_PHOTO:
-            return await self.start_batch_set_channel_photo(task_schema, client_manager)
+            return await self.start_batch_set_channel_photo(user_id, task_schema, client_manager)
 
         if task_type == TaskType.SET_DESCRIPTION:
             return await self.start_batch_set_channel_description(task_schema, client_manager)
