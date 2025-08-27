@@ -16,6 +16,7 @@ from app.core.lifespan import lifespan
 from app.core.logging_config import setup_logging
 from app.db.tortoise_config import TORTOISE_ORM
 from app.exceptions import NotFoundRecordError, AlreadyExistError
+from app.core.config import settings
 
 setup_logging()
 
@@ -23,7 +24,7 @@ app = FastAPI(
     lifespan=lifespan,
     title='Tennel',
     version='0.0.1',
-    debug=True,
+    debug=settings.DEBUG,
 )
 
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])

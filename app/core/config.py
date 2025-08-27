@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     AI_API_KEY: str
     AI_API_URL: str
 
+    DEBUG: bool
+
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / '.env',
         env_file_encoding='utf-8',
