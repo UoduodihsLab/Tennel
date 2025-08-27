@@ -61,11 +61,11 @@ async def create_daily_publish_message_scheduler(
         user_id: int,
         min_word_count: int,
         max_word_count: int,
-        include_imgs: bool,
-        include_videos: bool,
-        include_primary_links: bool,
         ai_prompt: str,
         channels_ids: List[str],
+        include_imgs: bool = False,
+        include_videos: bool = False,
+        include_primary_links: bool = False,
 ):
     try:
         for cid in channels_ids:
