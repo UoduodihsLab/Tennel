@@ -7,7 +7,7 @@ from app.api.deps import auth_dependency
 from app.constants.enum import MediaType
 from app.db.models.user import UserModel
 from app.schemas.common import PageResponse, Pagination
-from app.schemas.media import MediaResponse, MediaFilter
+from app.schemas.media import MediaOut, MediaFilter
 from app.services.media import MediaService
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ router = APIRouter(
 
 @router.post(
     '/',
-    response_model=MediaResponse,
+    response_model=MediaOut,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new media file"
 )
@@ -38,7 +38,7 @@ async def create_media(request: Request, m_type: MediaType = Form(...), file: Up
 
 @router.get(
     '/',
-    response_model=PageResponse[MediaResponse],
+    response_model=PageResponse[MediaOut],
     status_code=status.HTTP_200_OK,
     summary="List media files"
 )

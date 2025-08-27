@@ -7,7 +7,8 @@ class MediaCreate(BaseModel):
     m_type: MediaType
 
 
-class MediaResponse(BaseModel):
+class MediaOut(BaseModel):
+    id: int
     filename: str
     m_type: MediaType
 

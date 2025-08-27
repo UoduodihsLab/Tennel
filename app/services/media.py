@@ -1,4 +1,5 @@
 import os
+import random
 from pathlib import Path
 from typing import List
 
@@ -8,11 +9,10 @@ from fastapi import UploadFile
 from app.constants.enum import MediaType
 from app.core.config import settings
 from app.crud.media import MediaCRUD
-from app.exceptions import UnsupportedMediaTypeError, MediaTooLargeError
+from app.exceptions import UnsupportedMediaTypeError, MediaTooLargeError, NotFoundRecordError
 from app.schemas.common import PageResponse
-from app.schemas.media import MediaFilter, MediaResponse
+from app.schemas.media import MediaFilter, MediaOut
 from app.utils.media_tools import generate_filename, save_file_async
-import random
 
 
 class MediaService:
@@ -25,7 +25,7 @@ class MediaService:
             size: int,
             filters: MediaFilter,
             order_by: List[str] | None = None,
-    ) -> PageResponse[MediaResponse]:
+    ) -> PageResponse[MediaOut]:
         offset = (page - 1) * size
         filters_dict = filters.model_dump()
 
@@ -36,11 +36,11 @@ class MediaService:
             order_by=order_by,
         )
 
-        items = [MediaResponse.model_validate(row) for row in rows]
+        items = [MediaOut.model_validate(row) for row in rows]
 
-        return PageResponse[MediaResponse](total=total, items=items)
+        return PageResponse[MediaOut](total=total, items=items)
 
-    async def create_avatar(self, user_id: int, file: UploadFile) -> MediaResponse:
+    async def create_avatar(self, user_id: int, file: UploadFile) -> MediaOut:
         file.file.seek(0, os.SEEK_END)
         file_size = file.file.tell()
 
@@ -70,9 +70,9 @@ class MediaService:
             }
         )
 
-        return MediaResponse.model_validate(created_avatar)
+        return MediaOut.model_validate(created_avatar)
 
-    async def create_image(self, user_id: int, file: UploadFile) -> MediaResponse:
+    async def create_image(self, user_id: int, file: UploadFile) -> MediaOut:
         file.file.seek(0, os.SEEK_END)
         file_size = file.file.tell()
 
@@ -102,9 +102,9 @@ class MediaService:
             }
         )
 
-        return MediaResponse.model_validate(created_avatar)
+        return MediaOut.model_validate(created_avatar)
 
-    async def create_video(self, user_id: int, file: UploadFile) -> MediaResponse:
+    async def create_video(self, user_id: int, file: UploadFile) -> MediaOut:
         file.file.seek(0, os.SEEK_END)
         file_size = file.file.tell()
 
@@ -134,9 +134,9 @@ class MediaService:
             }
         )
 
-        return MediaResponse.model_validate(created_avatar)
+        return MediaOut.model_validate(created_avatar)
 
-    async def create_media(self, user_id: int, file: UploadFile, m_type: MediaType) -> MediaResponse:
+    async def create_media(self, user_id: int, file: UploadFile, m_type: MediaType) -> MediaOut:
         if m_type == MediaType.AVATAR:
             return await self.create_avatar(user_id, file)
         if m_type == MediaType.IMAGE:
@@ -149,15 +149,23 @@ class MediaService:
     async def get_random_avatar_by_user_id(self, user_id: int):
         paths_list = await self.crud.get_medias_by_user_id_and_m_type(user_id, MediaType.AVATAR)
 
+        if len(paths_list) == 0:
+            raise NotFoundRecordError('未找到头像资源, 请先上传头像后再试')
+
         return random.choice(paths_list)
 
     async def get_random_img_by_user_id(self, user_id: int) -> str:
         paths_list = await self.crud.get_medias_by_user_id_and_m_type(user_id, MediaType.IMAGE)
+
+        if len(paths_list) == 0:
+            raise NotFoundRecordError('未找到图片资源, 请先上传图片后再试')
+
         return random.choice(paths_list)
 
     async def get_random_video_by_user_id(self, user_id: int) -> str:
         paths_list = await self.crud.get_medias_by_user_id_and_m_type(user_id, MediaType.VIDEO)
+
+        if len(paths_list) == 0:
+            raise NotFoundRecordError('未找到视频资源, 请先上传视频后再试')
+
         return random.choice(paths_list)
-
-
-

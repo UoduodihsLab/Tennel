@@ -133,8 +133,6 @@ class TaskService:
         titles_count = len(titles)
         titles_copy = titles[:]
 
-        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
-
         for _ in range(total):
             if titles_count >= total:
                 title = titles_copy.pop()
@@ -143,6 +141,8 @@ class TaskService:
 
             task_data = (task_schema.id, client_manager, session_name, title)
             queue_manager.create_channel_queue.put_nowait(task_data)
+
+        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
 
     async def start_batch_set_channel_username(
             self,
@@ -158,8 +158,6 @@ class TaskService:
                 raise NotFoundRecordError(f'未查询到此频道相关的记录: {cid}')
             channels_to_accounts.append(channel_to_account)
 
-        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
-
         for c2a in channels_to_accounts:
             username = generate_username(c2a.channel.tid)
             task_data = (
@@ -171,6 +169,8 @@ class TaskService:
                 username
             )
             queue_manager.set_channel_username_queue.put_nowait(task_data)
+
+        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
 
     async def start_batch_set_channel_photo(
             self,
@@ -188,8 +188,6 @@ class TaskService:
 
             c2a_list.append(c2a)
 
-        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
-
         for c2a in c2a_list:
             photo_filename = await MediaService().get_random_avatar_by_user_id(user_id)
             photo_path = str(settings.MEDIA_ROOT / photo_filename)
@@ -202,6 +200,8 @@ class TaskService:
                 photo_path,
             )
             queue_manager.set_channel_photo_queue.put_nowait(task_data)
+
+        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
 
     async def start_batch_set_channel_description(
             self,
@@ -217,8 +217,6 @@ class TaskService:
                 raise NotFoundRecordError(f'未查询到此频道相关记录: {cid}')
             c2a_list.append(c2a)
 
-        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
-
         for c2a in c2a_list:
             description = args['description']
             task_data = (
@@ -230,6 +228,8 @@ class TaskService:
                 description,
             )
             queue_manager.set_channel_description_queue.put_nowait(task_data)
+
+        await self.crud.update(task_schema.id, {'status': TaskStatus.RUNNING})
 
     async def start_task(self, task_id: int, user_id: int, client_manager: ClientManager):
         # TODO: 有待优化，这一步是判断任务是否存在兼任务是否属于当前用户
