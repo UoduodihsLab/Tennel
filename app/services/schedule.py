@@ -89,7 +89,7 @@ class ScheduleService:
         job_id = f'{schedule_record.id}'
         job = scheduler.get_job(job_id)
         if job is not None:
-            scheduler.pause_job(f'{schedule_record.id}')
+            scheduler.pause_job(job_id)
         await self.crud.update(schedule_record.id, {'status': ScheduleStatus.PENDING})
         return schedule_record.id
 
@@ -98,7 +98,11 @@ class ScheduleService:
         if schedule_record is None:
             raise NotFoundRecordError(f'查无此任务 {schedule_id}')
 
-        scheduler.remove_job(f'{schedule_record.id}')
+        job_id = f'{schedule_record.id}'
+        job = scheduler.get_job(job_id)
+        if job is not None:
+            scheduler.pause_job(job_id)
+            scheduler.remove_job(job_id)
         await self.crud.delete(schedule_record.id)
         return schedule_record.id
 
