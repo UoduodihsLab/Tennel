@@ -71,7 +71,7 @@ async def create_daily_publish_message_scheduler(
         for cid in channels_ids:
             c2a: AccountChannelModel | None = await AccountChannelCRUD().get_with_channel_account(cid)
             times = generate_random_times()
-            primary_links = ','.join(c2a.channel.primary_links)
+            primary_links =c2a.channel.primary_link
             for t in times:
                 scheduler.add_job(
                     func=process_publish_message,
