@@ -34,8 +34,12 @@ router = APIRouter(
     summary='Create a new task'
 )
 async def create_task(request: Request, data_to_create: TaskCreate):
-    current_user: UserModel = request.state.user
-    return await service.create_task(current_user.id, data_to_create)
+    try:
+        current_user: UserModel = request.state.user
+        return await service.create_task(current_user.id, data_to_create)
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get(
@@ -50,10 +54,13 @@ async def read_tasks(
         pagination: Pagination = Depends(),
         order_by: List[str] = Query(None, title='排序字段')
 ):
-    current_user: UserModel = request.state.user
-    filters.user_id = current_user.id
-
-    return await service.list(page=pagination.page, size=pagination.size, filters=filters, order_by=order_by)
+    try:
+        current_user: UserModel = request.state.user
+        filters.user_id = current_user.id
+        return await service.list(page=pagination.page, size=pagination.size, filters=filters, order_by=order_by)
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.post(
