@@ -11,6 +11,8 @@ from app.crud.account_channel import AccountChannelCRUD
 from app.db.models import AccountChannelModel
 from app.services.media import MediaService
 from app.utils.channel_tools import generate_random_times, generate_channel_message_to_publish, tid_to_chat_id
+from zoneinfo import ZoneInfo
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -62,15 +64,17 @@ async def create_daily_publish_message_scheduler(
         min_word_count: int,
         max_word_count: int,
         ai_prompt: str,
-        channels_ids: List[str],
+        channels_ids: List[int],
         include_imgs: bool = False,
         include_videos: bool = False,
         include_primary_links: bool = False,
 ):
     try:
+        shanghai_tz = ZoneInfo('Asia/Shanghai')
+        start_time = datetime.now(shanghai_tz)
         for cid in channels_ids:
             c2a: AccountChannelModel | None = await AccountChannelCRUD().get_with_channel_account(cid)
-            times = generate_random_times()
+            times = generate_random_times(start_time)
             primary_links =c2a.channel.primary_link
             for t in times:
                 scheduler.add_job(

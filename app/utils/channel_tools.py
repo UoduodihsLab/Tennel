@@ -1,7 +1,8 @@
 import base64
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import List
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -26,6 +27,7 @@ def generate_username(channel_tid: int) -> str:
 
 
 def generate_random_times(
+        start_time: datetime,
         num_times: int = 10,
         separation_minutes: int = 30
 ) -> List[datetime]:
@@ -34,9 +36,6 @@ def generate_random_times(
         raise ValueError('无法在满足间隔约束条件下生成所需数量的时间点')
 
     chosen_slots = random.sample(range(total_slots), num_times)
-
-    now = datetime.now(timezone.utc) + timedelta(hours=8)
-    start_time = datetime(now.year, now.month, now.day, 0, 0, tzinfo=timezone.utc) + timedelta(hours=8)
 
     times = []
     for slot in chosen_slots:
